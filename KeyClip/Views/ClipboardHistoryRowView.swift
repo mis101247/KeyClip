@@ -99,6 +99,19 @@ struct ClipboardHistoryRowView: View {
             }
 
             HStack(spacing: metadataSpacing) {
+                if item.isOversize {
+                    HStack(spacing: 3) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                        Text("Auto-deletes in 24h")
+                    }
+                    .font(.system(.caption2))
+                    .foregroundStyle(.orange)
+
+                    Text("·")
+                        .font(.system(.caption2))
+                        .foregroundStyle(.tertiary)
+                }
+
                 Text(relativeTimestamp)
 
                 Text("·")

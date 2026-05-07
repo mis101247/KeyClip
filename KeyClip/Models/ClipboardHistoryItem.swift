@@ -8,6 +8,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
     let type: ContentType
     let attachmentFilename: String?
     let attachmentKind: AttachmentKind?
+    let isOversize: Bool
 
     init(
         id: UUID,
@@ -16,7 +17,8 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         contentHash: String,
         type: ContentType,
         attachmentFilename: String? = nil,
-        attachmentKind: AttachmentKind? = nil
+        attachmentKind: AttachmentKind? = nil,
+        isOversize: Bool = false
     ) {
         self.id = id
         self.content = content
@@ -25,10 +27,11 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.type = type
         self.attachmentFilename = attachmentFilename
         self.attachmentKind = attachmentKind
+        self.isOversize = isOversize
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, content, createdAt, contentHash, type, attachmentFilename, attachmentKind
+        case id, content, createdAt, contentHash, type, attachmentFilename, attachmentKind, isOversize
     }
 
     init(from decoder: Decoder) throws {
@@ -40,5 +43,6 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.type = try container.decodeIfPresent(ContentType.self, forKey: .type) ?? .text
         self.attachmentFilename = try container.decodeIfPresent(String.self, forKey: .attachmentFilename)
         self.attachmentKind = try container.decodeIfPresent(AttachmentKind.self, forKey: .attachmentKind)
+        self.isOversize = try container.decodeIfPresent(Bool.self, forKey: .isOversize) ?? false
     }
 }

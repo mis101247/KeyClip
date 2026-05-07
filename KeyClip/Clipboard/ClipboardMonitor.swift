@@ -2,13 +2,12 @@ import AppKit
 import CryptoKit
 
 final class ClipboardMonitor {
-    private static let maxTextBytes = 500 * 1024
-    private static let maxRichTextBytes = 1024 * 1024
-    private static let maxImageBytes = 10 * 1024 * 1024
+    private static let maxBytes = 100 * 1024 * 1024
+    private static let oversizeThresholdBytes = 10 * 1024 * 1024
 
     private let pasteboard: NSPasteboard
-    private let onNewText: (String, ContentType, Data?) -> Void
-    private let onNewImage: (Data, String, CGSize) -> Void
+    private let onNewText: (String, ContentType, Data?, Bool) -> Void
+    private let onNewImage: (Data, String, CGSize, Bool) -> Void
     private var timer: Timer?
     private var lastChangeCount: Int
     private var isWritingFromHistory = false
@@ -16,8 +15,8 @@ final class ClipboardMonitor {
 
     init(
         pasteboard: NSPasteboard = .general,
-        onNewText: @escaping (String, ContentType, Data?) -> Void,
-        onNewImage: @escaping (Data, String, CGSize) -> Void
+        onNewText: @escaping (String, ContentType, Data?, Bool) -> Void,
+        onNewImage: @escaping (Data, String, CGSize, Bool) -> Void
     ) {
         self.pasteboard = pasteboard
         self.onNewText = onNewText
@@ -91,13 +90,14 @@ final class ClipboardMonitor {
         }
 
         if let image = readImageFromPasteboard() {
-            guard image.data.count <= Self.maxImageBytes else {
+            guard image.data.count <= Self.maxBytes else {
                 NSLog("Skipping oversize image clip: \(image.data.count) bytes")
                 return
             }
 
             let contentHash = sha256HexHash(image.data)
-            onNewImage(image.data, contentHash, image.dimensions)
+            let isOversize = image.data.count > Self.oversizeThresholdBytes
+            onNewImage(image.data, contentHash, image.dimensions, isOversize)
             return
         }
 
@@ -107,11 +107,10 @@ final class ClipboardMonitor {
         }
 
         let rtfData = sanitizedRtfData(pasteboard.data(forType: .rtf))
-        var type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
-        if type == .richText && rtfData == nil {
-            type = .text
-        }
-        onNewText(content, type, rtfData)
+        let type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
+        let textBytes = content.utf8.count
+        let isOversize = textBytes + (rtfData?.count ?? 0) > Self.oversizeThresholdBytes
+        onNewText(content, type, rtfData, isOversize)
     }
 
     private func readImageFromPasteboard() -> (data: Data, dimensions: CGSize)? {
@@ -145,14 +144,14 @@ final class ClipboardMonitor {
     }
 
     private func sanitizedRtfData(_ data: Data?) -> Data? {
-        guard let data, data.count <= Self.maxRichTextBytes else { return nil }
+        guard let data, data.count <= Self.maxBytes else { return nil }
         return data
     }
 
     private func isValidClipboardContent(_ content: String) -> Bool {
         guard !content.isEmpty else { return false }
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
-        guard content.utf8.count <= Self.maxTextBytes else { return false }
+        guard content.utf8.count <= Self.maxBytes else { return false }
 
         return true
     }

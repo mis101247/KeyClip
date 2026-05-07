@@ -20,7 +20,7 @@ final class ClipboardHistoryStore: ObservableObject {
         load()
     }
 
-    func add(content: String, type: ContentType, rtfData: Data? = nil) {
+    func add(content: String, type: ContentType, rtfData: Data? = nil, isOversize: Bool = false) {
         let contentHash = sha256Hash(content)
 
         if let existingIndex = items.firstIndex(where: { $0.contentHash == contentHash }) {
@@ -33,7 +33,8 @@ final class ClipboardHistoryStore: ObservableObject {
                 contentHash: existingItem.contentHash,
                 type: type,
                 attachmentFilename: rtfAttachmentFilename ?? existingItem.attachmentFilename,
-                attachmentKind: rtfAttachmentFilename == nil ? existingItem.attachmentKind : .rtf
+                attachmentKind: rtfAttachmentFilename == nil ? existingItem.attachmentKind : .rtf,
+                isOversize: isOversize
             )
             items.insert(updatedItem, at: 0)
         } else {
@@ -45,7 +46,8 @@ final class ClipboardHistoryStore: ObservableObject {
                 contentHash: contentHash,
                 type: type,
                 attachmentFilename: rtfAttachmentFilename,
-                attachmentKind: rtfAttachmentFilename == nil ? nil : .rtf
+                attachmentKind: rtfAttachmentFilename == nil ? nil : .rtf,
+                isOversize: isOversize
             )
             items.insert(item, at: 0)
         }
@@ -86,15 +88,25 @@ final class ClipboardHistoryStore: ObservableObject {
         }
     }
 
-    func addImage(data: Data, hash: String, dimensions: CGSize) {
-        guard data.count <= 10 * 1024 * 1024 else {
+    func addImage(data: Data, hash: String, dimensions: CGSize, isOversize: Bool = false) {
+        guard data.count <= 100 * 1024 * 1024 else {
             NSLog("Skipping oversize image: \(data.count) bytes")
             return
         }
 
         if let existingIndex = items.firstIndex(where: { $0.contentHash == hash }) {
             let existingItem = items.remove(at: existingIndex)
-            items.insert(existingItem, at: 0)
+            let updatedItem = ClipboardHistoryItem(
+                id: existingItem.id,
+                content: existingItem.content,
+                createdAt: existingItem.createdAt,
+                contentHash: existingItem.contentHash,
+                type: existingItem.type,
+                attachmentFilename: existingItem.attachmentFilename,
+                attachmentKind: existingItem.attachmentKind,
+                isOversize: isOversize
+            )
+            items.insert(updatedItem, at: 0)
         } else {
             do {
                 let filename = try attachments.write(data: data, kind: .image, suggestedExtension: "png")
@@ -107,7 +119,8 @@ final class ClipboardHistoryStore: ObservableObject {
                     contentHash: hash,
                     type: .image,
                     attachmentFilename: filename,
-                    attachmentKind: .image
+                    attachmentKind: .image,
+                    isOversize: isOversize
                 )
                 items.insert(item, at: 0)
             } catch {
@@ -161,6 +174,19 @@ final class ClipboardHistoryStore: ObservableObject {
     func sweepExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
         let toRemove = items.filter { item in
             item.createdAt < cutoff && !protectedIDs.contains(item.id)
+        }
+        guard !toRemove.isEmpty else { return }
+        let removeIDs = Set(toRemove.map(\.id))
+        items.removeAll { removeIDs.contains($0.id) }
+        cleanupAttachments(for: toRemove)
+        onItemsRemoved?(toRemove.map(\.id))
+        save()
+    }
+
+    /// Remove oversize items older than cutoff, exempting protectedIDs (items in custom groups).
+    func sweepOversizeExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
+        let toRemove = items.filter { item in
+            item.isOversize && item.createdAt < cutoff && !protectedIDs.contains(item.id)
         }
         guard !toRemove.isEmpty else { return }
         let removeIDs = Set(toRemove.map(\.id))

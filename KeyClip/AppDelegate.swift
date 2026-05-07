@@ -23,11 +23,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let monitor = ClipboardMonitor(
-            onNewText: { content, type, rtfData in
-                store.add(content: content, type: type, rtfData: rtfData)
+            onNewText: { content, type, rtfData, isOversize in
+                store.add(content: content, type: type, rtfData: rtfData, isOversize: isOversize)
             },
-            onNewImage: { data, hash, dimensions in
-                store.addImage(data: data, hash: hash, dimensions: dimensions)
+            onNewImage: { data, hash, dimensions, isOversize in
+                store.addImage(data: data, hash: hash, dimensions: dimensions, isOversize: isOversize)
             }
         )
         guard let groupStore else { return }

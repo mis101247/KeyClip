@@ -9,6 +9,7 @@ final class MenuBarController: NSObject {
     private let settings: UserSettings
     private let statusItem: NSStatusItem
     private let popover: NSPopover
+    private var globalClickMonitor: Any?
 
     init(
         store: ClipboardHistoryStore,
@@ -30,6 +31,10 @@ final class MenuBarController: NSObject {
         configureStatusItem()
         configurePopover()
         updateStatusItemAppearance()
+    }
+
+    deinit {
+        removeGlobalClickMonitor()
     }
 
     private func configureStatusItem() {
@@ -131,9 +136,27 @@ final class MenuBarController: NSObject {
         resetPopoverContent()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
+        installGlobalClickMonitor()
     }
 
     private func closePopover() {
+        removeGlobalClickMonitor()
         popover.performClose(nil)
+    }
+
+    private func installGlobalClickMonitor() {
+        removeGlobalClickMonitor()
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.closePopover()
+            }
+        }
+    }
+
+    private func removeGlobalClickMonitor() {
+        if let globalClickMonitor {
+            NSEvent.removeMonitor(globalClickMonitor)
+            self.globalClickMonitor = nil
+        }
     }
 }
