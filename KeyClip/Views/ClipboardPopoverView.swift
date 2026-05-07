@@ -96,6 +96,34 @@ struct ClipboardPopoverView: View {
         }
     }
 
+    private var clearScopeLabel: String {
+        switch sidebarSelection {
+        case .all:
+            return "Clear History"
+        case .contentType(let type):
+            return "Clear \(type.displayName)"
+        case .group(let id):
+            if let group = groupStore.groups.first(where: { $0.id == id }) {
+                return "Clear \(group.name)"
+            }
+            return "Clear"
+        }
+    }
+
+    private var clearScopeIsEmpty: Bool {
+        sidebarFilteredItems.isEmpty
+    }
+
+    private func performScopedClear() {
+        switch sidebarSelection {
+        case .all:
+            store.clear()
+        case .contentType, .group:
+            let ids = sidebarFilteredItems.map(\.id)
+            store.remove(ids: ids)
+        }
+    }
+
     var body: some View {
         ZStack {
             Rectangle()
@@ -221,7 +249,8 @@ struct ClipboardPopoverView: View {
                             shortcutLabel: shortcutLabel(for: index),
                             groupStore: groupStore,
                             attachmentStore: attachmentStore,
-                            onCopy: { onSelect(item) }
+                            onCopy: { onSelect(item) },
+                            onDelete: { store.remove(id: item.id) }
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -243,8 +272,10 @@ struct ClipboardPopoverView: View {
 
     private var footer: some View {
         HStack {
-            Button("Clear History") { store.clear() }
-                .disabled(store.items.isEmpty)
+            Button(clearScopeLabel) {
+                performScopedClear()
+            }
+                .disabled(clearScopeIsEmpty)
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
 

@@ -138,6 +138,25 @@ final class ClipboardHistoryStore: ObservableObject {
         save()
     }
 
+    func remove(id: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        let removed = items.remove(at: index)
+        cleanupAttachments(for: [removed])
+        onItemsRemoved?([removed.id])
+        save()
+    }
+
+    func remove(ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+        let idSet = Set(ids)
+        let removed = items.filter { idSet.contains($0.id) }
+        guard !removed.isEmpty else { return }
+        items.removeAll { idSet.contains($0.id) }
+        cleanupAttachments(for: removed)
+        onItemsRemoved?(removed.map(\.id))
+        save()
+    }
+
     /// Remove items with createdAt before cutoff, exempting protectedIDs (items in custom groups).
     func sweepExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
         let toRemove = items.filter { item in

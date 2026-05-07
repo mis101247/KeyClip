@@ -6,6 +6,7 @@ struct ClipboardHistoryRowView: View {
     @ObservedObject var groupStore: ClipboardGroupStore
     let attachmentStore: AttachmentStore
     let onCopy: () -> Void
+    let onDelete: () -> Void
 
     @State private var isHovered = false
 
@@ -136,6 +137,14 @@ struct ClipboardHistoryRowView: View {
                 } label: {
                     Label("Add to Group", systemImage: "folder.badge.plus")
                 }
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label("Delete", systemImage: "trash")
             }
         }
         .onHover { hovering in
