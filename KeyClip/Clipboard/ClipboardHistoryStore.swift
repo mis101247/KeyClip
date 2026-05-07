@@ -21,7 +21,14 @@ final class ClipboardHistoryStore: ObservableObject {
         load()
     }
 
-    func add(content: String, type: ContentType, rtfData: Data? = nil, isOversize: Bool = false) {
+    func add(
+        content: String,
+        type: ContentType,
+        rtfData: Data? = nil,
+        isOversize: Bool = false,
+        sourceAppBundleID: String? = nil,
+        sourceAppName: String? = nil
+    ) {
         let contentHash = sha256Hash(content)
 
         if let existingIndex = items.firstIndex(where: { $0.contentHash == contentHash }) {
@@ -35,7 +42,9 @@ final class ClipboardHistoryStore: ObservableObject {
                 type: type,
                 attachmentFilename: rtfAttachmentFilename ?? existingItem.attachmentFilename,
                 attachmentKind: rtfAttachmentFilename == nil ? existingItem.attachmentKind : .rtf,
-                isOversize: isOversize
+                isOversize: isOversize,
+                sourceAppBundleID: sourceAppBundleID,
+                sourceAppName: sourceAppName
             )
             items.insert(updatedItem, at: 0)
         } else {
@@ -48,7 +57,9 @@ final class ClipboardHistoryStore: ObservableObject {
                 type: type,
                 attachmentFilename: rtfAttachmentFilename,
                 attachmentKind: rtfAttachmentFilename == nil ? nil : .rtf,
-                isOversize: isOversize
+                isOversize: isOversize,
+                sourceAppBundleID: sourceAppBundleID,
+                sourceAppName: sourceAppName
             )
             items.insert(item, at: 0)
         }
@@ -90,7 +101,14 @@ final class ClipboardHistoryStore: ObservableObject {
         }
     }
 
-    func addImage(data: Data, hash: String, dimensions: CGSize, isOversize: Bool = false) {
+    func addImage(
+        data: Data,
+        hash: String,
+        dimensions: CGSize,
+        isOversize: Bool = false,
+        sourceAppBundleID: String? = nil,
+        sourceAppName: String? = nil
+    ) {
         guard data.count <= 100 * 1024 * 1024 else {
             NSLog("Skipping oversize image: \(data.count) bytes")
             return
@@ -106,7 +124,9 @@ final class ClipboardHistoryStore: ObservableObject {
                 type: existingItem.type,
                 attachmentFilename: existingItem.attachmentFilename,
                 attachmentKind: existingItem.attachmentKind,
-                isOversize: isOversize
+                isOversize: isOversize,
+                sourceAppBundleID: sourceAppBundleID,
+                sourceAppName: sourceAppName
             )
             items.insert(updatedItem, at: 0)
         } else {
@@ -122,7 +142,9 @@ final class ClipboardHistoryStore: ObservableObject {
                     type: .image,
                     attachmentFilename: filename,
                     attachmentKind: .image,
-                    isOversize: isOversize
+                    isOversize: isOversize,
+                    sourceAppBundleID: sourceAppBundleID,
+                    sourceAppName: sourceAppName
                 )
                 items.insert(item, at: 0)
             } catch {

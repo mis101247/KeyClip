@@ -98,50 +98,9 @@ struct ClipboardHistoryRowView: View {
                 }
             }
 
-            HStack(spacing: metadataSpacing) {
-                if item.isOversize {
-                    HStack(spacing: 3) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                        Text("Auto-deletes in 24h")
-                    }
-                    .font(.system(.caption2))
-                    .foregroundStyle(.orange)
-
-                    Text("·")
-                        .font(.system(.caption2))
-                        .foregroundStyle(.tertiary)
-                }
-
-                Text(relativeTimestamp)
-
-                Text("·")
-
-                Text(item.type.displayName)
-
-                if !membershipGroups.isEmpty {
-                    Text("·")
-                        .font(.system(.caption2))
-                        .foregroundStyle(.tertiary)
-
-                    HStack(spacing: 3) {
-                        ForEach(membershipGroups.prefix(3)) { group in
-                            Image(systemName: group.systemImage)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-
-                        if membershipGroups.count > 3 {
-                            Text("+\(membershipGroups.count - 3)")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .help(membershipGroups.map(\.name).joined(separator: ", "))
-                }
-            }
+            MetadataLine(chunks: metadataChunks, spacing: metadataSpacing)
             .font(.system(.caption2))
             .foregroundStyle(.secondary)
-            .lineLimit(1)
         }
         .padding(.horizontal, rowHorizontalPadding)
         .padding(.vertical, rowVerticalPadding)
@@ -218,5 +177,101 @@ struct ClipboardHistoryRowView: View {
                 RoundedRectangle(cornerRadius: typeIconContainerCornerRadius)
                     .fill(item.type.tintColor.opacity(typeIconBackgroundOpacity))
             )
+    }
+
+    private var metadataChunks: [AnyView] {
+        var chunks: [AnyView] = []
+
+        if item.isOversize {
+            chunks.append(AnyView(oversizeChip))
+        }
+
+        if item.sourceAppBundleID != nil {
+            chunks.append(AnyView(sourceAppChip))
+        }
+
+        chunks.append(AnyView(Text(relativeTimestamp)))
+        chunks.append(AnyView(Text(item.type.displayName)))
+
+        if !membershipGroups.isEmpty {
+            chunks.append(AnyView(groupChips))
+        }
+
+        return chunks
+    }
+
+    private var oversizeChip: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "exclamationmark.triangle.fill")
+            Text("Auto-deletes in 24h")
+        }
+        .font(.system(.caption2))
+        .foregroundStyle(.orange)
+    }
+
+    @ViewBuilder
+    private var sourceAppChip: some View {
+        if let bundleID = item.sourceAppBundleID {
+            HStack(spacing: 3) {
+                if let icon = AppIconLoader.icon(forBundleID: bundleID) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                } else {
+                    Image(systemName: "app.dashed")
+                        .font(.system(size: 10, weight: .medium))
+                        .frame(width: 12, height: 12)
+                }
+
+                Text(item.sourceAppName ?? bundleID)
+                    .font(.system(.caption2))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 80, alignment: .leading)
+            }
+            .help(item.sourceAppName ?? bundleID)
+        } else {
+            EmptyView()
+        }
+    }
+
+    private var groupChips: some View {
+        HStack(spacing: 3) {
+            ForEach(membershipGroups.prefix(3)) { group in
+                Image(systemName: group.systemImage)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            if membershipGroups.count > 3 {
+                Text("+\(membershipGroups.count - 3)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .help(membershipGroups.map(\.name).joined(separator: ", "))
+    }
+}
+
+private struct MetadataLine: View {
+    let chunks: [AnyView]
+    let spacing: CGFloat
+
+    var body: some View {
+        HStack(spacing: spacing) {
+            ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                if index > 0 {
+                    Text("·")
+                        .font(.system(.caption2))
+                        .foregroundStyle(.tertiary)
+                }
+
+                chunk
+            }
+        }
+        .lineLimit(1)
+        .truncationMode(.tail)
     }
 }

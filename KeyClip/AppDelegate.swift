@@ -23,11 +23,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let monitor = ClipboardMonitor(
-            onNewText: { content, type, rtfData, isOversize in
-                store.add(content: content, type: type, rtfData: rtfData, isOversize: isOversize)
+            onNewText: { content, type, rtfData, isOversize, bundleID, appName in
+                store.add(
+                    content: content,
+                    type: type,
+                    rtfData: rtfData,
+                    isOversize: isOversize,
+                    sourceAppBundleID: bundleID,
+                    sourceAppName: appName
+                )
             },
-            onNewImage: { data, hash, dimensions, isOversize in
-                store.addImage(data: data, hash: hash, dimensions: dimensions, isOversize: isOversize)
+            onNewImage: { data, hash, dimensions, isOversize, bundleID, appName in
+                store.addImage(
+                    data: data,
+                    hash: hash,
+                    dimensions: dimensions,
+                    isOversize: isOversize,
+                    sourceAppBundleID: bundleID,
+                    sourceAppName: appName
+                )
             }
         )
         guard let groupStore else { return }

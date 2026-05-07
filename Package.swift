@@ -33,6 +33,7 @@ let package = Package(
                 "Views/SidebarView.swift",
                 "Views/ClipboardPopoverView.swift",
                 "Views/ClipboardHistoryRowView.swift",
+                "Utilities/AppIconLoader.swift",
                 "Utilities/ContentTypeDetector.swift",
                 "Utilities/GlobalHotkey.swift",
                 "Utilities/StringHashing.swift",

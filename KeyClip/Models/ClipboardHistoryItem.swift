@@ -9,6 +9,8 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
     let attachmentFilename: String?
     let attachmentKind: AttachmentKind?
     let isOversize: Bool
+    var sourceAppBundleID: String?
+    var sourceAppName: String?
 
     init(
         id: UUID,
@@ -18,7 +20,9 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         type: ContentType,
         attachmentFilename: String? = nil,
         attachmentKind: AttachmentKind? = nil,
-        isOversize: Bool = false
+        isOversize: Bool = false,
+        sourceAppBundleID: String? = nil,
+        sourceAppName: String? = nil
     ) {
         self.id = id
         self.content = content
@@ -28,10 +32,13 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.attachmentFilename = attachmentFilename
         self.attachmentKind = attachmentKind
         self.isOversize = isOversize
+        self.sourceAppBundleID = sourceAppBundleID
+        self.sourceAppName = sourceAppName
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, content, createdAt, contentHash, type, attachmentFilename, attachmentKind, isOversize
+        case sourceAppBundleID, sourceAppName
     }
 
     init(from decoder: Decoder) throws {
@@ -44,5 +51,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.attachmentFilename = try container.decodeIfPresent(String.self, forKey: .attachmentFilename)
         self.attachmentKind = try container.decodeIfPresent(AttachmentKind.self, forKey: .attachmentKind)
         self.isOversize = try container.decodeIfPresent(Bool.self, forKey: .isOversize) ?? false
+        self.sourceAppBundleID = try container.decodeIfPresent(String.self, forKey: .sourceAppBundleID)
+        self.sourceAppName = try container.decodeIfPresent(String.self, forKey: .sourceAppName)
     }
 }

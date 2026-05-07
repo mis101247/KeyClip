@@ -6,8 +6,8 @@ final class ClipboardMonitor {
     private static let oversizeThresholdBytes = 10 * 1024 * 1024
 
     private let pasteboard: NSPasteboard
-    private let onNewText: (String, ContentType, Data?, Bool) -> Void
-    private let onNewImage: (Data, String, CGSize, Bool) -> Void
+    private let onNewText: (String, ContentType, Data?, Bool, String?, String?) -> Void
+    private let onNewImage: (Data, String, CGSize, Bool, String?, String?) -> Void
     private var timer: Timer?
     private var lastChangeCount: Int
     private var isWritingFromHistory = false
@@ -15,8 +15,8 @@ final class ClipboardMonitor {
 
     init(
         pasteboard: NSPasteboard = .general,
-        onNewText: @escaping (String, ContentType, Data?, Bool) -> Void,
-        onNewImage: @escaping (Data, String, CGSize, Bool) -> Void
+        onNewText: @escaping (String, ContentType, Data?, Bool, String?, String?) -> Void,
+        onNewImage: @escaping (Data, String, CGSize, Bool, String?, String?) -> Void
     ) {
         self.pasteboard = pasteboard
         self.onNewText = onNewText
@@ -89,6 +89,11 @@ final class ClipboardMonitor {
             return
         }
 
+        let frontApp = NSWorkspace.shared.frontmostApplication
+        let myBundleID = Bundle.main.bundleIdentifier
+        let resolvedBundleID = (frontApp?.bundleIdentifier == myBundleID) ? nil : frontApp?.bundleIdentifier
+        let resolvedName = (frontApp?.bundleIdentifier == myBundleID) ? nil : frontApp?.localizedName
+
         if let image = readImageFromPasteboard() {
             guard image.data.count <= Self.maxBytes else {
                 NSLog("Skipping oversize image clip: \(image.data.count) bytes")
@@ -97,7 +102,7 @@ final class ClipboardMonitor {
 
             let contentHash = sha256HexHash(image.data)
             let isOversize = image.data.count > Self.oversizeThresholdBytes
-            onNewImage(image.data, contentHash, image.dimensions, isOversize)
+            onNewImage(image.data, contentHash, image.dimensions, isOversize, resolvedBundleID, resolvedName)
             return
         }
 
@@ -110,7 +115,7 @@ final class ClipboardMonitor {
         let type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
         let textBytes = content.utf8.count
         let isOversize = textBytes + (rtfData?.count ?? 0) > Self.oversizeThresholdBytes
-        onNewText(content, type, rtfData, isOversize)
+        onNewText(content, type, rtfData, isOversize, resolvedBundleID, resolvedName)
     }
 
     private func readImageFromPasteboard() -> (data: Data, dimensions: CGSize)? {
