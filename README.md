@@ -2,6 +2,14 @@
 
 KeyClip is a small macOS menu bar clipboard manager built with Swift and SwiftUI. It polls the general pasteboard, stores recent text clips locally as JSON, shows history in a status item popover, and lets you restore a previous entry without re-adding it to history.
 
+## Features
+
+- **Quick paste shortcuts** — `⌘1`–`⌘9` and `⌘0` jump to the first 10 visible items.
+- **Content type detection** — Each clip is classified as Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code; the row shows a colored type icon and label.
+- **Sidebar filtering** — Left sidebar lists every populated content type with a live count, so you can narrow the list to (for example) only Links or only Code.
+- **Custom groups** — Create your own folders, right-click any clip and pick **Add to Group** to file it. Groups persist across launches.
+- **Search** — Case- and diacritic-insensitive substring match across the current sidebar scope.
+
 ## Building without Xcode
 
 This repository includes a Swift Package Manager manifest and a small bundle script so you can build the app from Terminal with Xcode Command Line Tools only.
@@ -49,9 +57,14 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
    - `Controllers/MenuBarController.swift`
    - `Clipboard/ClipboardMonitor.swift`
    - `Clipboard/ClipboardHistoryStore.swift`
+   - `Clipboard/ClipboardGroupStore.swift`
    - `Models/ClipboardHistoryItem.swift`
+   - `Models/ContentType.swift`
+   - `Models/ClipboardGroup.swift`
    - `Views/ClipboardPopoverView.swift`
    - `Views/ClipboardHistoryRowView.swift`
+   - `Views/SidebarView.swift`
+   - `Utilities/ContentTypeDetector.swift`
    - `Utilities/StringHashing.swift`
 
 ## Frameworks and Settings
@@ -81,4 +94,7 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
 - `ClipboardMonitor` polls `NSPasteboard.general.changeCount` every 0.5 seconds.
 - Empty, whitespace-only, and text clips larger than 500 KB are ignored.
 - `ClipboardHistoryStore` persists up to 100 clips at `~/Library/Application Support/com.keyo.KeyClip/clipboard-history.json`.
+- `ClipboardGroupStore` persists user-defined groups at `~/Library/Application Support/com.keyo.KeyClip/clipboard-groups.json` and prunes orphaned item IDs whenever a clip is dropped from history.
 - Duplicate clips are detected by SHA-256 hash after normalizing line endings for hashing only, while preserving the original clipboard content.
+- `ContentTypeDetector` inspects each clip and the pasteboard to assign one of: Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code. Image / File / Files cases exist in the model but are not produced by the current text-only monitor.
+- The history JSON is forward-compatible: clips written before the type field existed decode as `.text`.

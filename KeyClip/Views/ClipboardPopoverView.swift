@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ClipboardPopoverView: View {
     @ObservedObject var store: ClipboardHistoryStore
+    @ObservedObject var groupStore: ClipboardGroupStore
     @State private var searchQuery = ""
+    @State private var sidebarSelection: SidebarSelection = .all
 
     let onSelect: (ClipboardHistoryItem) -> Void
     let onClose: () -> Void
@@ -11,16 +13,43 @@ struct ClipboardPopoverView: View {
         searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var sidebarFilteredItems: [ClipboardHistoryItem] {
+        switch sidebarSelection {
+        case .all:
+            return store.items
+        case .contentType(let type):
+            return store.items.filter { $0.type == type }
+        case .group(let groupID):
+            guard let group = groupStore.groups.first(where: { $0.id == groupID }) else {
+                return []
+            }
+
+            let itemIDs = Set(group.itemIDs)
+            return store.items.filter { itemIDs.contains($0.id) }
+        }
+    }
+
     private var filteredItems: [ClipboardHistoryItem] {
         guard !trimmedSearchQuery.isEmpty else {
-            return store.items
+            return sidebarFilteredItems
         }
 
-        return store.items.filter { item in
+        return sidebarFilteredItems.filter { item in
             item.content.range(
                 of: trimmedSearchQuery,
                 options: [.caseInsensitive, .diacriticInsensitive]
             ) != nil
+        }
+    }
+
+    private var listTitle: String {
+        switch sidebarSelection {
+        case .all:
+            return "Clipboard"
+        case .contentType(let type):
+            return type.displayName
+        case .group(let groupID):
+            return groupStore.groups.first(where: { $0.id == groupID })?.name ?? "Clipboard"
         }
     }
 
@@ -29,17 +58,27 @@ struct ClipboardPopoverView: View {
             Color(nsColor: .controlBackgroundColor)
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                header
+            HStack(spacing: 0) {
+                SidebarView(
+                    historyStore: store,
+                    groupStore: groupStore,
+                    selection: $sidebarSelection
+                )
 
-                listSection
+                VStack(spacing: 0) {
+                    header
 
-                footer
+                    listSection
+
+                    footer
+                }
+                .frame(width: 420, height: 520)
             }
-            .frame(width: 400, height: 520)
+            .frame(width: 600, height: 520)
 
             hotkeyButtons
         }
+        .frame(width: 600, height: 520)
         .onExitCommand {
             onClose()
         }
@@ -48,12 +87,12 @@ struct ClipboardPopoverView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Clipboard")
+                Text(listTitle)
                     .font(.headline)
 
                 Spacer()
 
-                Text("\(store.items.count)")
+                Text("\(filteredItems.count)")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
@@ -106,12 +145,27 @@ struct ClipboardPopoverView: View {
 
     @ViewBuilder
     private var listSection: some View {
-        if store.items.isEmpty {
-            emptyState(
-                systemImage: "doc.on.clipboard",
-                title: "No history yet",
-                hint: "Copy something to get started"
-            )
+        if sidebarFilteredItems.isEmpty {
+            switch sidebarSelection {
+            case .all:
+                emptyState(
+                    systemImage: "doc.on.clipboard",
+                    title: "No history yet",
+                    hint: "Copy something to get started"
+                )
+            case .contentType(let type):
+                emptyState(
+                    systemImage: type.systemImage,
+                    title: "No items of type \(type.displayName)",
+                    hint: "Copy something to add"
+                )
+            case .group:
+                emptyState(
+                    systemImage: "folder",
+                    title: "Group is empty",
+                    hint: "Right-click an item to add it"
+                )
+            }
         } else if filteredItems.isEmpty {
             emptyState(
                 systemImage: "magnifyingglass",
@@ -124,7 +178,9 @@ struct ClipboardPopoverView: View {
                     ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
                         ClipboardHistoryRowView(
                             item: item,
-                            shortcutLabel: shortcutLabel(for: index)
+                            shortcutLabel: shortcutLabel(for: index),
+                            groupStore: groupStore,
+                            onCopy: { onSelect(item) }
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -168,11 +224,11 @@ struct ClipboardPopoverView: View {
 
     private var hotkeyButtons: some View {
         VStack {
-            ForEach(0..<4, id: \.self) { index in
+            ForEach(0..<10, id: \.self) { index in
                 Button("") {
                     selectFilteredItem(at: index)
                 }
-                .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(Character(index == 9 ? "0" : "\(index + 1)")), modifiers: .command)
             }
         }
         .frame(width: 0, height: 0)
@@ -187,9 +243,9 @@ struct ClipboardPopoverView: View {
     }
 
     private func shortcutLabel(for index: Int) -> String? {
-        guard index < 4 else { return nil }
+        guard index < 10 else { return nil }
 
-        return "⌘\(index + 1)"
+        return "⌘\(index == 9 ? 0 : index + 1)"
     }
 
     private func emptyState(systemImage: String, title: String, hint: String) -> some View {

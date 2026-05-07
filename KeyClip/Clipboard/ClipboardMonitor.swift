@@ -2,14 +2,14 @@ import AppKit
 
 final class ClipboardMonitor {
     private let pasteboard: NSPasteboard
-    private let onNewClip: (String) -> Void
+    private let onNewClip: (String, ContentType) -> Void
     private var timer: Timer?
     private var lastChangeCount: Int
     private var isWritingFromHistory = false
 
     init(
         pasteboard: NSPasteboard = .general,
-        onNewClip: @escaping (String) -> Void
+        onNewClip: @escaping (String, ContentType) -> Void
     ) {
         self.pasteboard = pasteboard
         self.onNewClip = onNewClip
@@ -52,7 +52,8 @@ final class ClipboardMonitor {
             return
         }
 
-        onNewClip(content)
+        let type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
+        onNewClip(content, type)
     }
 
     private func isValidClipboardContent(_ content: String) -> Bool {

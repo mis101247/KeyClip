@@ -23,9 +23,14 @@ let package = Package(
                 "Controllers/MenuBarController.swift",
                 "Clipboard/ClipboardMonitor.swift",
                 "Clipboard/ClipboardHistoryStore.swift",
+                "Clipboard/ClipboardGroupStore.swift",
+                "Models/ContentType.swift",
                 "Models/ClipboardHistoryItem.swift",
+                "Models/ClipboardGroup.swift",
+                "Views/SidebarView.swift",
                 "Views/ClipboardPopoverView.swift",
                 "Views/ClipboardHistoryRowView.swift",
+                "Utilities/ContentTypeDetector.swift",
                 "Utilities/StringHashing.swift"
             ]
         )

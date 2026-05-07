@@ -4,12 +4,14 @@ import SwiftUI
 final class MenuBarController: NSObject {
     private let store: ClipboardHistoryStore
     private let monitor: ClipboardMonitor
+    private let groupStore: ClipboardGroupStore
     private let statusItem: NSStatusItem
     private let popover: NSPopover
 
-    init(store: ClipboardHistoryStore, monitor: ClipboardMonitor) {
+    init(store: ClipboardHistoryStore, monitor: ClipboardMonitor, groupStore: ClipboardGroupStore) {
         self.store = store
         self.monitor = monitor
+        self.groupStore = groupStore
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         self.popover = NSPopover()
 
@@ -31,7 +33,7 @@ final class MenuBarController: NSObject {
     }
 
     private func configurePopover() {
-        popover.contentSize = NSSize(width: 400, height: 520)
+        popover.contentSize = NSSize(width: 600, height: 520)
         popover.behavior = .transient
         resetPopoverContent()
     }
@@ -40,6 +42,7 @@ final class MenuBarController: NSObject {
         popover.contentViewController = NSHostingController(
             rootView: ClipboardPopoverView(
                 store: store,
+                groupStore: groupStore,
                 onSelect: { [weak self] item in
                     self?.monitor.writeToPasteboard(item.content)
                     self?.closePopover()
