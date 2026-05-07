@@ -30,6 +30,7 @@ let package = Package(
                 "Models/ClipboardHistoryItem.swift",
                 "Models/ClipboardGroup.swift",
                 "Models/RetentionPolicy.swift",
+                "Views/Theme.swift",
                 "Views/SidebarView.swift",
                 "Views/ClipboardPopoverView.swift",
                 "Views/ClipboardHistoryRowView.swift",

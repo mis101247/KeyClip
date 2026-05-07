@@ -10,6 +10,7 @@ enum SidebarSelection: Hashable {
 struct SidebarView: View {
     @ObservedObject var historyStore: ClipboardHistoryStore
     @ObservedObject var groupStore: ClipboardGroupStore
+    @Binding var searchQuery: String
     @Binding var selection: SidebarSelection
 
     @State private var isAddingGroup = false
@@ -18,20 +19,18 @@ struct SidebarView: View {
     @State private var renameDraft = ""
     @State private var dropTargetGroupID: UUID?
     @FocusState private var focusedField: FocusedField?
+    @FocusState private var isSearchFocused: Bool
 
-    private let sidebarWidth: CGFloat = 180
+    private let sidebarWidth: CGFloat = 200
     private let sectionSpacing: CGFloat = 4
-    private let scrollVerticalPadding: CGFloat = 12
-    private let sectionTopPadding: CGFloat = 8
+    private let scrollBottomPadding: CGFloat = 12
     private let sidebarDividerWidth: CGFloat = 1
-    private let sidebarDividerOpacity: Double = 0.08
-    private let addIconSize: CGFloat = 11
-    private let addButtonSize: CGFloat = 18
+    private let addIconSize: CGFloat = 14
+    private let addButtonSize: CGFloat = 22
     private let menuIconSize: CGFloat = 12
     private let menuButtonSize: CGFloat = 22
     private let textFieldHorizontalPadding: CGFloat = 10
     private let textFieldHeight: CGFloat = 28
-    private let textFieldCornerRadius: CGFloat = 6
     private let textFieldOuterHorizontalPadding: CGFloat = 8
 
     private let iconChoices = [
@@ -48,20 +47,25 @@ struct SidebarView: View {
     var body: some View {
         ZStack(alignment: .trailing) {
             Rectangle()
-                .fill(.regularMaterial)
+                .fill(Theme.surface)
                 .ignoresSafeArea()
 
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: sectionSpacing) {
-                    allSection
-                    contentTypesSection
-                    groupsSection
+            VStack(spacing: 0) {
+                sidebarHeader
+                searchField
+
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: sectionSpacing) {
+                        allSection
+                        contentTypesSection
+                        groupsSection
+                    }
+                    .padding(.bottom, scrollBottomPadding)
                 }
-                .padding(.vertical, scrollVerticalPadding)
             }
 
             Rectangle()
-                .fill(Color.primary.opacity(sidebarDividerOpacity))
+                .fill(Theme.divider)
                 .frame(width: sidebarDividerWidth)
         }
         .frame(width: sidebarWidth)
@@ -81,12 +85,54 @@ struct SidebarView: View {
         }
     }
 
+    private var sidebarHeader: some View {
+        HStack(spacing: 8) {
+            Text("Clipboard")
+                .font(Theme.textSmEmphasis)
+                .foregroundStyle(Theme.text)
+
+            Spacer(minLength: 4)
+
+            CountBadge(count: historyStore.items.count)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    private var searchField: some View {
+        TextField("Search clipboard…", text: $searchQuery)
+            .textFieldStyle(.plain)
+            .focused($isSearchFocused)
+            .font(Theme.textXs)
+            .foregroundStyle(Theme.text)
+            .padding(.leading, 26)
+            .padding(.trailing, 8)
+            .frame(height: 28)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusSm)
+                    .fill(Theme.surface2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radiusSm)
+                            .stroke(isSearchFocused ? Theme.primary : Theme.border, lineWidth: 1)
+                    )
+            )
+            .overlay(alignment: .leading) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textFaint)
+                    .padding(.leading, 8)
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+    }
+
     private var allSection: some View {
         SidebarRow(
             systemImage: "tray.full",
             title: "All",
             count: historyStore.items.count,
-            tintColor: .accentColor,
+            tintColor: Theme.textMuted,
             isSelected: selection == .all
         ) {
             selection = .all
@@ -102,14 +148,13 @@ struct SidebarView: View {
 
         if !visibleTypes.isEmpty {
             SectionHeader(title: "CONTENT TYPES")
-                .padding(.top, sectionTopPadding)
 
             ForEach(visibleTypes, id: \.0) { type, count in
                 SidebarRow(
                     systemImage: type.systemImage,
                     title: type.displayName,
                     count: count,
-                    tintColor: type.tintColor,
+                    tintColor: type.themeTint,
                     isSelected: selection == .contentType(type)
                 ) {
                     selection = .contentType(type)
@@ -125,13 +170,14 @@ struct SidebarView: View {
                     startAddingGroup()
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: addIconSize, weight: .semibold))
+                        .font(.system(size: addIconSize, weight: .regular))
+                        .foregroundStyle(Theme.textFaint)
                         .frame(width: addButtonSize, height: addButtonSize)
                 }
                 .buttonStyle(.plain)
+                .modifier(SidebarHoverBackground())
                 .help("New group")
             }
-            .padding(.top, sectionTopPadding)
 
             if isAddingGroup {
                 groupTextField(
@@ -162,13 +208,11 @@ struct SidebarView: View {
             systemImage: group.systemImage,
             title: group.name,
             count: group.itemIDs.count,
-            tintColor: .secondary,
+            tintColor: Theme.textMuted,
             isSelected: selection == .group(group.id),
             backgroundFill: dropTargetGroupID == group.id
-                ? Color.accentColor.opacity(0.18)
-                : (selection == .group(group.id)
-                    ? Color.accentColor.opacity(0.12)
-                    : Color.clear),
+                ? Theme.primary.opacity(0.18)
+                : nil,
             trailingMenu: {
                 groupActionsMenu(for: group, labelStyle: .ellipsis)
             },
@@ -248,8 +292,12 @@ struct SidebarView: View {
             .padding(.horizontal, textFieldHorizontalPadding)
             .frame(height: textFieldHeight)
             .background(
-                RoundedRectangle(cornerRadius: textFieldCornerRadius)
-                    .fill(Color(nsColor: .textBackgroundColor))
+                RoundedRectangle(cornerRadius: Theme.radiusSm)
+                    .fill(Theme.surface2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radiusSm)
+                            .stroke(Theme.border, lineWidth: 1)
+                    )
             )
             .padding(.horizontal, textFieldOuterHorizontalPadding)
     }
@@ -320,9 +368,8 @@ private struct SectionHeader<Trailing: View>: View {
     @ViewBuilder var trailing: () -> Trailing
 
     private let headerSpacing: CGFloat = 6
-    private let horizontalPadding: CGFloat = 10
-    private let headerHeight: CGFloat = 22
-    private let trackingAmount: CGFloat = 0.5
+    private let horizontalPadding: CGFloat = 8
+    private let trackingAmount: CGFloat = 0.96
 
     init(title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
         self.title = title
@@ -332,16 +379,17 @@ private struct SectionHeader<Trailing: View>: View {
     var body: some View {
         HStack(spacing: headerSpacing) {
             Text(title)
-                .font(.system(.caption2, weight: .semibold))
+                .font(Theme.textXs)
                 .tracking(trackingAmount)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Theme.textFaint)
 
             Spacer()
 
             trailing()
         }
         .padding(.horizontal, horizontalPadding)
-        .frame(height: headerHeight)
+        .padding(.top, 12)
+        .padding(.bottom, 4)
     }
 }
 
@@ -368,25 +416,22 @@ private struct SidebarRow<TrailingMenu: View>: View {
     private let rowSpacing: CGFloat = 8
     private let rowHorizontalPadding: CGFloat = 10
     private let rowOuterHorizontalPadding: CGFloat = 8
-    private let rowHeight: CGFloat = 28
-    private let rowCornerRadius: CGFloat = 6
     private let rowIconSize: CGFloat = 13
     private let rowIconWidth: CGFloat = 16
-    private let rowTitleSize: CGFloat = 13
     private let spacerMinLength: CGFloat = 4
-    private let selectedBackgroundOpacity: Double = 0.12
-    private let hoverBackgroundOpacity: Double = 0.04
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: rowSpacing) {
                 Image(systemName: systemImage)
                     .font(.system(size: rowIconSize, weight: .medium))
-                    .foregroundStyle(isSelected ? Color.accentColor : tintColor)
+                    .foregroundStyle(isSelected ? Theme.primary : tintColor)
                     .frame(width: rowIconWidth)
 
                 Text(title)
-                    .font(.system(size: rowTitleSize))
+                    .font(Theme.textSm)
+                    .fontWeight(isSelected ? .medium : .regular)
+                    .foregroundStyle(isSelected ? Theme.primary : Theme.textMuted)
                     .lineLimit(1)
 
                 Spacer(minLength: spacerMinLength)
@@ -394,23 +439,17 @@ private struct SidebarRow<TrailingMenu: View>: View {
                 if isHovered {
                     trailingMenu()
                 } else {
-                    Text("\(count)")
-                        .font(.system(.caption2, design: .monospaced).monospacedDigit())
-                        .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    CountBadge(count: count)
                 }
             }
-            .foregroundStyle(isSelected ? Color.accentColor : .primary)
             .padding(.horizontal, rowHorizontalPadding)
-            .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
+            .padding(.vertical, 5)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: rowCornerRadius)
+                RoundedRectangle(cornerRadius: Theme.radiusSm)
                     .fill(
                         backgroundFill
-                            ?? (isSelected
-                                ? Color.accentColor.opacity(selectedBackgroundOpacity)
-                                : (isHovered
-                                    ? Color.primary.opacity(hoverBackgroundOpacity)
-                                    : Color.clear))
+                            ?? (isHovered ? Theme.surfaceOffset : Color.clear)
                     )
             )
             .contentShape(Rectangle())
@@ -453,4 +492,35 @@ private enum FocusedField: Hashable {
 private enum GroupActionMenuLabelStyle {
     case ellipsis
     case text
+}
+
+private struct CountBadge: View {
+    let count: Int
+
+    var body: some View {
+        Text("\(count)")
+            .font(Theme.textXs)
+            .foregroundStyle(Theme.textMuted)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusFull)
+                    .fill(Theme.surfaceOffset)
+            )
+    }
+}
+
+private struct SidebarHoverBackground: ViewModifier {
+    @State private var isHovered = false
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusSm)
+                    .fill(isHovered ? Theme.surfaceOffset : Color.clear)
+            )
+            .onHover { hovering in
+                isHovered = hovering
+            }
+    }
 }

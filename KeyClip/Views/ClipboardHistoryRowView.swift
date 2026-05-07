@@ -11,23 +11,16 @@ struct ClipboardHistoryRowView: View {
     @State private var isHovered = false
 
     private let previewCharacterLimit = 150
-    private let rowSpacing: CGFloat = 5
-    private let previewSpacing: CGFloat = 8
+    private let rowSpacing: CGFloat = 12
     private let metadataSpacing: CGFloat = 5
-    private let rowHorizontalPadding: CGFloat = 12
-    private let rowVerticalPadding: CGFloat = 8
+    private let rowHorizontalPadding: CGFloat = 16
+    private let rowVerticalPadding: CGFloat = 10
     private let rowMinHeight: CGFloat = 52
-    private let rowMaxHeight: CGFloat = 64
-    private let rowCornerRadius: CGFloat = 8
-    private let hoverOpacity: Double = 0.04
-    private let typeIconSize: CGFloat = 13
-    private let typeIconContainerSize: CGFloat = 22
-    private let typeIconContainerCornerRadius: CGFloat = 6
-    private let typeIconBackgroundOpacity: Double = 0.12
-    private let typeIconTintOpacity: Double = 0.85
+    private let typeIconSize: CGFloat = 16
+    private let typeIconContainerSize: CGFloat = 20
     private let imagePreviewSize: CGFloat = 36
     private let imagePreviewCornerRadius: CGFloat = 6
-    private let shortcutPreviewSpacing: CGFloat = 4
+    private let shortcutMinWidth: CGFloat = 24
 
     private var previewText: String {
         let firstLine = item.content
@@ -64,51 +57,44 @@ struct ClipboardHistoryRowView: View {
 
     private var previewFont: Font {
         if item.type == .code {
-            return .system(.callout, design: .monospaced)
+            return Theme.textCodePreview
         }
 
-        if item.type == .emoji {
-            return .system(.callout)
-        }
-
-        if usesMonospacedPreview {
-            return .system(.callout, design: .monospaced)
-        }
-
-        return .system(.callout)
+        return Theme.textSm
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: rowSpacing) {
-            HStack(alignment: .firstTextBaseline, spacing: previewSpacing) {
-                leadingPreview
+        HStack(alignment: .top, spacing: rowSpacing) {
+            leadingPreview
 
-                HStack(alignment: .firstTextBaseline, spacing: shortcutPreviewSpacing) {
-                    if let shortcutLabel {
-                        Text(shortcutLabel)
-                            .font(.system(.caption2, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 0) {
+                Text(previewText)
+                    .font(previewFont)
+                    .foregroundStyle(Theme.text)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .textSelection(.disabled)
 
-                    Text(previewText)
-                        .font(previewFont)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .textSelection(.disabled)
-                }
+                MetadataLine(chunks: metadataChunks, spacing: metadataSpacing)
+                    .font(Theme.textXs)
+                    .foregroundStyle(Theme.textMuted)
+                    .padding(.top, 4)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            MetadataLine(chunks: metadataChunks, spacing: metadataSpacing)
-            .font(.system(.caption2))
-            .foregroundStyle(.secondary)
+            if let shortcutLabel {
+                Text(shortcutLabel)
+                    .font(Theme.textMono)
+                    .foregroundStyle(Theme.textFaint)
+                    .padding(.top, 2)
+                    .frame(minWidth: shortcutMinWidth, alignment: .trailing)
+            }
         }
         .padding(.horizontal, rowHorizontalPadding)
         .padding(.vertical, rowVerticalPadding)
-        .frame(maxWidth: .infinity, minHeight: rowMinHeight, maxHeight: rowMaxHeight, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: rowCornerRadius)
-                .fill(isHovered ? Color.primary.opacity(hoverOpacity) : Color.clear)
-        )
+        .frame(maxWidth: .infinity, minHeight: rowMinHeight, alignment: .leading)
+        .background(isHovered ? Theme.surface : Color.clear)
+        .contentShape(Rectangle())
         .contextMenu {
             Button("Copy") {
                 onCopy()
@@ -171,12 +157,8 @@ struct ClipboardHistoryRowView: View {
     private var typeIcon: some View {
         Image(systemName: item.type.systemImage)
             .font(.system(size: typeIconSize, weight: .medium))
-            .foregroundStyle(item.type.tintColor.opacity(typeIconTintOpacity))
+            .foregroundStyle(item.type.themeTint)
             .frame(width: typeIconContainerSize, height: typeIconContainerSize)
-            .background(
-                RoundedRectangle(cornerRadius: typeIconContainerCornerRadius)
-                    .fill(item.type.tintColor.opacity(typeIconBackgroundOpacity))
-            )
     }
 
     private var metadataChunks: [AnyView] {
@@ -187,7 +169,6 @@ struct ClipboardHistoryRowView: View {
         }
 
         chunks.append(AnyView(Text(relativeTimestamp)))
-        chunks.append(AnyView(Text(item.type.displayName)))
 
         if item.sourceAppBundleID != nil {
             chunks.append(AnyView(sourceAppChip))
@@ -205,7 +186,7 @@ struct ClipboardHistoryRowView: View {
             Image(systemName: "exclamationmark.triangle.fill")
             Text("24h")
         }
-        .font(.system(.caption2))
+        .font(Theme.textXs)
         .foregroundStyle(.orange)
         .help("Auto-deletes after 24 hours")
     }
@@ -226,8 +207,8 @@ struct ClipboardHistoryRowView: View {
                 }
 
                 Text(item.sourceAppName ?? bundleID)
-                    .font(.system(.caption2))
-                    .foregroundStyle(.secondary)
+                    .font(Theme.textXs)
+                    .foregroundStyle(Theme.textMuted)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: 70, alignment: .leading)
@@ -243,13 +224,13 @@ struct ClipboardHistoryRowView: View {
             ForEach(membershipGroups.prefix(3)) { group in
                 Image(systemName: group.systemImage)
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textMuted)
             }
 
             if membershipGroups.count > 3 {
                 Text("+\(membershipGroups.count - 3)")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textMuted)
             }
         }
         .help(membershipGroups.map(\.name).joined(separator: ", "))
@@ -265,9 +246,9 @@ private struct MetadataLine: View {
             ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
                 if index > 0 {
                     Text("·")
-                        .font(.system(.caption2))
+                        .font(Theme.textXs)
                         .fontWeight(.regular)
-                        .foregroundStyle(Color.primary.opacity(0.18))
+                        .foregroundStyle(Theme.textFaint)
                 }
 
                 chunk

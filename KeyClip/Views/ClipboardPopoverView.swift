@@ -4,7 +4,7 @@ struct ClipboardPopoverView: View {
     @ObservedObject var store: ClipboardHistoryStore
     @ObservedObject var groupStore: ClipboardGroupStore
     @ObservedObject var settings: UserSettings
-    @State private var searchQuery = ""
+    @State private var searchQuery: String = ""
     @State private var sidebarSelection: SidebarSelection = .all
     @State private var showClearConfirmation = false
 
@@ -14,40 +14,21 @@ struct ClipboardPopoverView: View {
 
     private let popoverWidth: CGFloat = 600
     private let popoverHeight: CGFloat = 520
-    private let contentWidth: CGFloat = 420
+    private let contentWidth: CGFloat = 400
     private let paneSpacing: CGFloat = 0
-    private let headerSpacing: CGFloat = 12
     private let headerHorizontalPadding: CGFloat = 16
     private let headerTopPadding: CGFloat = 12
-    private let headerBottomPadding: CGFloat = 12
-    private let headerDividerHeight: CGFloat = 1
-    private let headerDividerOpacity: Double = 0.08
-    private let countHorizontalPadding: CGFloat = 8
-    private let countVerticalPadding: CGFloat = 4
-    private let searchSpacing: CGFloat = 8
-    private let searchIconSize: CGFloat = 13
-    private let searchHorizontalPadding: CGFloat = 10
-    private let searchVerticalPadding: CGFloat = 8
-    private let searchCornerRadius: CGFloat = 8
-    private let subtleBackgroundOpacity: Double = 0.04
+    private let headerBottomPadding: CGFloat = 8
     private let listSpacing: CGFloat = 0
-    private let listHorizontalPadding: CGFloat = 16
-    private let listVerticalPadding: CGFloat = 12
-    private let rowWhitespacePadding: CGFloat = 2
-    private let rowWhitespaceHeight: CGFloat = 0
+    private let listVerticalPadding: CGFloat = 0
     private let footerHorizontalPadding: CGFloat = 16
-    private let footerTopPadding: CGFloat = 12
-    private let footerBottomPadding: CGFloat = 10
+    private let footerVerticalPadding: CGFloat = 8
     private let footerGearSize: CGFloat = 14
     private let emptyStateSpacing: CGFloat = 8
     private let emptyStateIconSize: CGFloat = 28
     private let emptyStatePadding: CGFloat = 24
     private let hiddenHotkeySize: CGFloat = 0
     private let hiddenHotkeyOpacity: Double = 0
-
-    private var countFont: Font {
-        .system(.caption2, design: .monospaced).monospacedDigit()
-    }
 
     private var retentionHintFont: Font {
         .system(.caption2)
@@ -97,11 +78,11 @@ struct ClipboardPopoverView: View {
     private var listTitle: String {
         switch sidebarSelection {
         case .all:
-            return "Clipboard"
+            return "All"
         case .contentType(let type):
             return type.displayName
         case .group(let groupID):
-            return groupStore.groups.first(where: { $0.id == groupID })?.name ?? "Clipboard"
+            return groupStore.groups.first(where: { $0.id == groupID })?.name ?? "All"
         }
     }
 
@@ -153,13 +134,14 @@ struct ClipboardPopoverView: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(.regularMaterial)
+                .fill(Theme.bg)
                 .ignoresSafeArea()
 
             HStack(spacing: paneSpacing) {
                 SidebarView(
                     historyStore: store,
                     groupStore: groupStore,
+                    searchQuery: $searchQuery,
                     selection: $sidebarSelection
                 )
 
@@ -194,58 +176,21 @@ struct ClipboardPopoverView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: headerSpacing) {
-            HStack {
-                Text(listTitle)
-                    .font(.system(.subheadline, weight: .semibold))
+        HStack {
+            Text(listTitle)
+                .font(Theme.textSmEmphasis)
+                .foregroundStyle(Theme.text)
 
-                Spacer()
+            Spacer()
 
-                Text("\(filteredItems.count)")
-                    .font(countFont)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, countHorizontalPadding)
-                    .padding(.vertical, countVerticalPadding)
-            }
-
-            searchField
+            Text("\(filteredItems.count)")
+                .font(Theme.textXs)
+                .foregroundStyle(Theme.textFaint)
         }
         .padding(.horizontal, headerHorizontalPadding)
         .padding(.top, headerTopPadding)
         .padding(.bottom, headerBottomPadding)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.primary.opacity(headerDividerOpacity))
-                .frame(height: headerDividerHeight)
-        }
-    }
-
-    private var searchField: some View {
-        HStack(spacing: searchSpacing) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: searchIconSize, weight: .medium))
-                .foregroundStyle(.secondary)
-
-            TextField("Search clipboard…", text: $searchQuery)
-                .textFieldStyle(.plain)
-
-            if !searchQuery.isEmpty {
-                Button {
-                    searchQuery = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .help("Clear search")
-            }
-        }
-        .padding(.horizontal, searchHorizontalPadding)
-        .padding(.vertical, searchVerticalPadding)
-        .background(
-            RoundedRectangle(cornerRadius: searchCornerRadius)
-                .fill(Color.primary.opacity(subtleBackgroundOpacity))
-        )
+        .background(Theme.bg)
     }
 
     @ViewBuilder
@@ -295,63 +240,79 @@ struct ClipboardPopoverView: View {
                         }
 
                         if index < filteredItems.count - 1 {
-                            Color.clear
-                                .frame(height: rowWhitespaceHeight)
-                                .padding(.vertical, rowWhitespacePadding)
+                            Divider()
+                                .background(Theme.divider)
                         }
                     }
                 }
-                .padding(.horizontal, listHorizontalPadding)
                 .padding(.vertical, listVerticalPadding)
             }
+            .background(Theme.bg)
         }
     }
 
     private var footer: some View {
-        HStack {
-            if shouldShowClearButton {
-                Button(clearScopeLabel) {
-                    showClearConfirmation = true
-                }
+        VStack(spacing: 0) {
+            Divider()
+                .background(Theme.divider)
+
+            HStack {
+                if shouldShowClearButton {
+                    Button {
+                        showClearConfirmation = true
+                    } label: {
+                        Text(clearScopeLabel)
+                    }
                     .disabled(clearableItems.isEmpty)
-                    .buttonStyle(.borderless)
-                    .foregroundStyle(.secondary)
-            }
+                    .buttonStyle(.plain)
+                    .font(Theme.textXs)
+                    .foregroundStyle(Theme.textMuted)
+                    .modifier(FooterHoverBackground())
+                }
 
-            Spacer()
+                Spacer()
 
-            Menu {
-                Section("Keep History For") {
-                    ForEach(RetentionPolicy.allCases) { policy in
-                        Button {
-                            settings.retentionPolicy = policy
-                        } label: {
-                            if settings.retentionPolicy == policy {
-                                Label(policy.displayName, systemImage: "checkmark")
-                            } else {
-                                Text(policy.displayName)
+                Menu {
+                    Section("Keep History For") {
+                        ForEach(RetentionPolicy.allCases) { policy in
+                            Button {
+                                settings.retentionPolicy = policy
+                            } label: {
+                                if settings.retentionPolicy == policy {
+                                    Label(policy.displayName, systemImage: "checkmark")
+                                } else {
+                                    Text(policy.displayName)
+                                }
                             }
                         }
                     }
+                    Divider()
+                    Text("Items in custom groups never expire")
+                        .font(retentionHintFont)
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: footerGearSize, weight: .regular))
+                        .foregroundStyle(Theme.textMuted)
                 }
-                Divider()
-                Text("Items in custom groups never expire")
-                    .font(retentionHintFont)
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: footerGearSize, weight: .regular))
-                    .foregroundStyle(.secondary)
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
+                .menuStyle(.borderlessButton)
+                .buttonStyle(.plain)
+                .fixedSize()
+                .modifier(FooterHoverBackground())
 
-            Button("Quit") { NSApplication.shared.terminate(nil) }
-                .buttonStyle(.borderless)
-                .foregroundStyle(.secondary)
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Text("Quit")
+                }
+                .buttonStyle(.plain)
+                .font(Theme.textXs)
+                .foregroundStyle(Theme.textMuted)
+                .modifier(FooterHoverBackground())
+            }
+            .padding(.horizontal, footerHorizontalPadding)
+            .padding(.vertical, footerVerticalPadding)
         }
-        .padding(.horizontal, footerHorizontalPadding)
-        .padding(.top, footerTopPadding)
-        .padding(.bottom, footerBottomPadding)
+        .background(Theme.bg)
     }
 
     private var hotkeyButtons: some View {
@@ -386,19 +347,38 @@ struct ClipboardPopoverView: View {
 
             Image(systemName: systemImage)
                 .font(.system(size: emptyStateIconSize))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textFaint)
 
             Text(title)
-                .font(.system(.subheadline, weight: .semibold))
+                .font(Theme.textSmEmphasis)
+                .foregroundStyle(Theme.text)
 
             Text(hint)
-                .font(.system(.caption2))
-                .foregroundStyle(.secondary)
+                .font(Theme.textXs)
+                .foregroundStyle(Theme.textMuted)
                 .multilineTextAlignment(.center)
 
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(emptyStatePadding)
+        .background(Theme.bg)
+    }
+}
+
+private struct FooterHoverBackground: ViewModifier {
+    @State private var isHovered = false
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, 6)
+            .frame(height: 24)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusSm)
+                    .fill(isHovered ? Theme.surfaceOffset : Color.clear)
+            )
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
