@@ -6,6 +6,7 @@ struct ClipboardPopoverView: View {
     @ObservedObject var settings: UserSettings
     @State private var searchQuery = ""
     @State private var sidebarSelection: SidebarSelection = .all
+    @State private var showClearConfirmation = false
 
     let attachmentStore: AttachmentStore
     let onSelect: (ClipboardHistoryItem) -> Void
@@ -107,12 +108,29 @@ struct ClipboardPopoverView: View {
     private var clearScopeLabel: String {
         switch sidebarSelection {
         case .all:
-            return "Clear Unfiled"
+            return "Clear All"
         case .contentType(let type):
-            return "Clear \(type.displayName)"
+            return "Clear all in \(type.displayName) type"
         case .group:
             return ""
         }
+    }
+
+    private var clearConfirmationTitle: String {
+        switch sidebarSelection {
+        case .all:
+            return "Clear all clipboard items?"
+        case .contentType(let type):
+            return "Clear all \(type.displayName) items?"
+        case .group:
+            return ""
+        }
+    }
+
+    private var clearConfirmationMessage: String {
+        let count = clearableItems.count
+        let noun = count == 1 ? "item" : "items"
+        return "\(count) \(noun) will be removed. Items in custom groups will be kept."
     }
 
     private var shouldShowClearButton: Bool {
@@ -161,6 +179,17 @@ struct ClipboardPopoverView: View {
         .frame(width: popoverWidth, height: popoverHeight)
         .onExitCommand {
             onClose()
+        }
+        .alert(
+            clearConfirmationTitle,
+            isPresented: $showClearConfirmation
+        ) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear", role: .destructive) {
+                performScopedClear()
+            }
+        } message: {
+            Text(clearConfirmationMessage)
         }
     }
 
@@ -282,7 +311,7 @@ struct ClipboardPopoverView: View {
         HStack {
             if shouldShowClearButton {
                 Button(clearScopeLabel) {
-                    performScopedClear()
+                    showClearConfirmation = true
                 }
                     .disabled(clearableItems.isEmpty)
                     .buttonStyle(.borderless)
