@@ -17,6 +17,21 @@ struct SidebarView: View {
     @State private var renameDraft = ""
     @FocusState private var focusedField: FocusedField?
 
+    private let sidebarWidth: CGFloat = 180
+    private let sectionSpacing: CGFloat = 4
+    private let scrollVerticalPadding: CGFloat = 12
+    private let sectionTopPadding: CGFloat = 8
+    private let sidebarDividerWidth: CGFloat = 1
+    private let sidebarDividerOpacity: Double = 0.08
+    private let addIconSize: CGFloat = 11
+    private let addButtonSize: CGFloat = 18
+    private let menuIconSize: CGFloat = 12
+    private let menuButtonSize: CGFloat = 22
+    private let textFieldHorizontalPadding: CGFloat = 10
+    private let textFieldHeight: CGFloat = 28
+    private let textFieldCornerRadius: CGFloat = 6
+    private let textFieldOuterHorizontalPadding: CGFloat = 8
+
     private let iconChoices = [
         "folder",
         "star",
@@ -30,23 +45,24 @@ struct SidebarView: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            Color(nsColor: .underPageBackgroundColor)
+            Rectangle()
+                .fill(.regularMaterial)
                 .ignoresSafeArea()
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 4) {
+                LazyVStack(alignment: .leading, spacing: sectionSpacing) {
                     allSection
                     contentTypesSection
                     groupsSection
                 }
-                .padding(.vertical, 10)
+                .padding(.vertical, scrollVerticalPadding)
             }
 
             Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(width: 1)
+                .fill(Color.primary.opacity(sidebarDividerOpacity))
+                .frame(width: sidebarDividerWidth)
         }
-        .frame(width: 180)
+        .frame(width: sidebarWidth)
         .onChange(of: isAddingGroup) { isAdding in
             guard isAdding else { return }
 
@@ -84,7 +100,7 @@ struct SidebarView: View {
 
         if !visibleTypes.isEmpty {
             SectionHeader(title: "CONTENT TYPES")
-                .padding(.top, 8)
+                .padding(.top, sectionTopPadding)
 
             ForEach(visibleTypes, id: \.0) { type, count in
                 SidebarRow(
@@ -101,19 +117,19 @@ struct SidebarView: View {
     }
 
     private var groupsSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: sectionSpacing) {
             SectionHeader(title: "GROUPS") {
                 Button {
                     startAddingGroup()
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .semibold))
-                        .frame(width: 18, height: 18)
+                        .font(.system(size: addIconSize, weight: .semibold))
+                        .frame(width: addButtonSize, height: addButtonSize)
                 }
                 .buttonStyle(.plain)
                 .help("New group")
             }
-            .padding(.top, 8)
+            .padding(.top, sectionTopPadding)
 
             if isAddingGroup {
                 groupTextField(
@@ -165,8 +181,8 @@ struct SidebarView: View {
             switch labelStyle {
             case .ellipsis:
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(width: 22, height: 22)
+                    .font(.system(size: menuIconSize, weight: .semibold))
+                    .frame(width: menuButtonSize, height: menuButtonSize)
             case .text:
                 Text("Actions")
             }
@@ -214,13 +230,13 @@ struct SidebarView: View {
             .focused($focusedField, equals: focus)
             .onSubmit(onSubmit)
             .onExitCommand(perform: onCancel)
-            .padding(.horizontal, 10)
-            .frame(height: 30)
+            .padding(.horizontal, textFieldHorizontalPadding)
+            .frame(height: textFieldHeight)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: textFieldCornerRadius)
                     .fill(Color(nsColor: .textBackgroundColor))
             )
-            .padding(.horizontal, 8)
+            .padding(.horizontal, textFieldOuterHorizontalPadding)
     }
 
     private func startAddingGroup() {
@@ -277,23 +293,29 @@ private struct SectionHeader<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: () -> Trailing
 
+    private let headerSpacing: CGFloat = 6
+    private let horizontalPadding: CGFloat = 10
+    private let headerHeight: CGFloat = 22
+    private let trackingAmount: CGFloat = 0.5
+
     init(title: String, @ViewBuilder trailing: @escaping () -> Trailing) {
         self.title = title
         self.trailing = trailing
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: headerSpacing) {
             Text(title)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(.caption2, weight: .semibold))
+                .tracking(trackingAmount)
+                .foregroundStyle(.tertiary)
 
             Spacer()
 
             trailing()
         }
-        .padding(.horizontal, 10)
-        .frame(height: 22)
+        .padding(.horizontal, horizontalPadding)
+        .frame(height: headerHeight)
     }
 }
 
@@ -316,55 +338,59 @@ private struct SidebarRow<TrailingMenu: View>: View {
 
     @State private var isHovered = false
 
+    private let rowSpacing: CGFloat = 8
+    private let rowHorizontalPadding: CGFloat = 10
+    private let rowOuterHorizontalPadding: CGFloat = 8
+    private let rowHeight: CGFloat = 28
+    private let rowCornerRadius: CGFloat = 6
+    private let rowIconSize: CGFloat = 13
+    private let rowIconWidth: CGFloat = 16
+    private let rowTitleSize: CGFloat = 13
+    private let spacerMinLength: CGFloat = 4
+    private let selectedBackgroundOpacity: Double = 0.12
+    private let hoverBackgroundOpacity: Double = 0.04
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: rowSpacing) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: rowIconSize, weight: .medium))
                     .foregroundStyle(isSelected ? Color.accentColor : tintColor)
-                    .frame(width: 16)
+                    .frame(width: rowIconWidth)
 
                 Text(title)
-                    .font(.system(size: 13))
+                    .font(.system(size: rowTitleSize))
                     .lineLimit(1)
 
-                Spacer(minLength: 4)
+                Spacer(minLength: spacerMinLength)
 
                 if isHovered {
                     trailingMenu()
                 } else {
                     Text("\(count)")
-                        .font(.caption.monospacedDigit())
+                        .font(.system(.caption2, design: .monospaced).monospacedDigit())
                         .foregroundStyle(isSelected ? Color.accentColor : .secondary)
                 }
             }
             .foregroundStyle(isSelected ? Color.accentColor : .primary)
-            .padding(.leading, 10)
-            .padding(.trailing, 8)
-            .frame(height: 30)
+            .padding(.horizontal, rowHorizontalPadding)
+            .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
             .background(rowBackground)
-            .overlay(alignment: .leading) {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.accentColor)
-                        .frame(width: 4)
-                }
-            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, rowOuterHorizontalPadding)
     }
 
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.accentColor.opacity(0.18))
+            RoundedRectangle(cornerRadius: rowCornerRadius)
+                .fill(Color.accentColor.opacity(selectedBackgroundOpacity))
         } else if isHovered {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+            RoundedRectangle(cornerRadius: rowCornerRadius)
+                .fill(Color.primary.opacity(hoverBackgroundOpacity))
         } else {
             Color.clear
         }

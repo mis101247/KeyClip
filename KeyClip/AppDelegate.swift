@@ -1,26 +1,55 @@
 import AppKit
+import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    let settings = UserSettings.shared
+    private let attachmentStore = AttachmentStore()
     private var historyStore: ClipboardHistoryStore?
     private var groupStore: ClipboardGroupStore?
     private var clipboardMonitor: ClipboardMonitor?
     private var menuBarController: MenuBarController?
+    private var retentionSweeper: RetentionSweeper?
+    private var cancellable: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        let store = ClipboardHistoryStore()
+        let store = ClipboardHistoryStore(attachments: attachmentStore)
         groupStore = ClipboardGroupStore()
         store.onItemsRemoved = { [weak groupStore] ids in
             groupStore?.purgeItems(ids)
         }
 
-        let monitor = ClipboardMonitor { content, type in
-            store.add(content: content, type: type)
-        }
+        let monitor = ClipboardMonitor(
+            onNewText: { content, type, rtfData in
+                store.add(content: content, type: type, rtfData: rtfData)
+            },
+            onNewImage: { data, hash, dimensions in
+                store.addImage(data: data, hash: hash, dimensions: dimensions)
+            }
+        )
         guard let groupStore else { return }
 
-        let controller = MenuBarController(store: store, monitor: monitor, groupStore: groupStore)
+        let retentionSweeper = RetentionSweeper(
+            historyStore: store,
+            groupStore: groupStore,
+            settings: settings
+        )
+        self.retentionSweeper = retentionSweeper
+        retentionSweeper.start()
+        cancellable = settings.$retentionPolicy.sink { [weak retentionSweeper] _ in
+            DispatchQueue.main.async {
+                retentionSweeper?.runSweep()
+            }
+        }
+
+        let controller = MenuBarController(
+            store: store,
+            monitor: monitor,
+            groupStore: groupStore,
+            attachmentStore: attachmentStore,
+            settings: settings
+        )
 
         historyStore = store
         clipboardMonitor = monitor

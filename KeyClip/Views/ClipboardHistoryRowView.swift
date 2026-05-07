@@ -4,22 +4,41 @@ struct ClipboardHistoryRowView: View {
     let item: ClipboardHistoryItem
     let shortcutLabel: String?
     @ObservedObject var groupStore: ClipboardGroupStore
+    let attachmentStore: AttachmentStore
     let onCopy: () -> Void
 
     @State private var isHovered = false
 
+    private let previewCharacterLimit = 150
+    private let rowSpacing: CGFloat = 5
+    private let previewSpacing: CGFloat = 8
+    private let metadataSpacing: CGFloat = 4
+    private let rowHorizontalPadding: CGFloat = 12
+    private let rowVerticalPadding: CGFloat = 8
+    private let rowMinHeight: CGFloat = 52
+    private let rowMaxHeight: CGFloat = 64
+    private let rowCornerRadius: CGFloat = 8
+    private let hoverOpacity: Double = 0.04
+    private let typeIconSize: CGFloat = 13
+    private let typeIconContainerSize: CGFloat = 22
+    private let typeIconContainerCornerRadius: CGFloat = 6
+    private let typeIconBackgroundOpacity: Double = 0.12
+    private let typeIconTintOpacity: Double = 0.85
+    private let imagePreviewSize: CGFloat = 36
+    private let imagePreviewCornerRadius: CGFloat = 6
+    private let shortcutPreviewSpacing: CGFloat = 4
+
     private var previewText: String {
-        let limit = 150
         let firstLine = item.content
             .split(whereSeparator: \.isNewline)
             .first
             .map(String.init) ?? item.content
 
-        if firstLine.count <= limit {
+        if firstLine.count <= previewCharacterLimit {
             return firstLine
         }
 
-        let endIndex = firstLine.index(firstLine.startIndex, offsetBy: limit)
+        let endIndex = firstLine.index(firstLine.startIndex, offsetBy: previewCharacterLimit)
         return String(firstLine[..<endIndex]) + "..."
     }
 
@@ -40,71 +59,57 @@ struct ClipboardHistoryRowView: View {
 
     private var previewFont: Font {
         if item.type == .code {
-            return .system(.body, design: .monospaced)
+            return .system(.callout, design: .monospaced)
         }
 
         if item.type == .emoji {
-            return .system(size: 18)
+            return .system(.callout)
         }
 
         if usesMonospacedPreview {
-            return .system(.body, design: .monospaced)
+            return .system(.callout, design: .monospaced)
         }
 
-        return .body
+        return .system(.callout)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Image(systemName: item.type.systemImage)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(item.type.tintColor)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(item.type.tintColor.opacity(0.15))
-                    )
+        VStack(alignment: .leading, spacing: rowSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: previewSpacing) {
+                leadingPreview
 
-                if let shortcutLabel {
-                    Text(shortcutLabel)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(nsColor: .quaternaryLabelColor))
-                        )
+                HStack(alignment: .firstTextBaseline, spacing: shortcutPreviewSpacing) {
+                    if let shortcutLabel {
+                        Text(shortcutLabel)
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text(previewText)
+                        .font(previewFont)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .textSelection(.disabled)
                 }
-
-                Text(previewText)
-                    .font(previewFont)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .textSelection(.disabled)
             }
 
-            HStack(spacing: 4) {
+            HStack(spacing: metadataSpacing) {
                 Text(relativeTimestamp)
 
                 Text("·")
 
                 Text(item.type.displayName)
             }
-            .font(.caption)
+            .font(.system(.caption2))
             .foregroundStyle(.secondary)
             .lineLimit(1)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 64, alignment: .leading)
+        .padding(.horizontal, rowHorizontalPadding)
+        .padding(.vertical, rowVerticalPadding)
+        .frame(maxWidth: .infinity, minHeight: rowMinHeight, maxHeight: rowMaxHeight, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(
-                    Color(nsColor: isHovered ? .selectedControlColor : .controlBackgroundColor)
-                        .opacity(isHovered ? 0.18 : 0.75)
-                )
+            RoundedRectangle(cornerRadius: rowCornerRadius)
+                .fill(isHovered ? Color.primary.opacity(hoverOpacity) : Color.clear)
         )
         .contextMenu {
             Button("Copy") {
@@ -136,5 +141,32 @@ struct ClipboardHistoryRowView: View {
         .onHover { hovering in
             isHovered = hovering
         }
+    }
+
+    @ViewBuilder
+    private var leadingPreview: some View {
+        if item.type == .image,
+           let filename = item.attachmentFilename,
+           let data = attachmentStore.read(filename: filename),
+           let nsImage = NSImage(data: data) {
+            Image(nsImage: nsImage)
+                .resizable()
+                .scaledToFill()
+                .frame(width: imagePreviewSize, height: imagePreviewSize)
+                .clipShape(RoundedRectangle(cornerRadius: imagePreviewCornerRadius))
+        } else {
+            typeIcon
+        }
+    }
+
+    private var typeIcon: some View {
+        Image(systemName: item.type.systemImage)
+            .font(.system(size: typeIconSize, weight: .medium))
+            .foregroundStyle(item.type.tintColor.opacity(typeIconTintOpacity))
+            .frame(width: typeIconContainerSize, height: typeIconContainerSize)
+            .background(
+                RoundedRectangle(cornerRadius: typeIconContainerCornerRadius)
+                    .fill(item.type.tintColor.opacity(typeIconBackgroundOpacity))
+            )
     }
 }

@@ -6,8 +6,11 @@ KeyClip is a small macOS menu bar clipboard manager built with Swift and SwiftUI
 
 - **Quick paste shortcuts** — `⌘1`–`⌘9` and `⌘0` jump to the first 10 visible items.
 - **Content type detection** — Each clip is classified as Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code; the row shows a colored type icon and label.
+- **Image clips** — Copy any image (PNG / TIFF) and KeyClip stores a thumbnail; selecting it writes the original PNG bytes back to the pasteboard.
+- **Rich text preservation** — Formatted clips keep their `.rtf` payload, so pasting again restores the original styling, not just the plain text.
 - **Sidebar filtering** — Left sidebar lists every populated content type with a live count, so you can narrow the list to (for example) only Links or only Code.
 - **Custom groups** — Create your own folders, right-click any clip and pick **Add to Group** to file it. Groups persist across launches.
+- **Retention policy** — Footer gear menu lets you keep history Forever / 1 Day / 7 Days / 30 Days. Items in any custom group are exempt from expiry.
 - **Search** — Case- and diacritic-insensitive substring match across the current sidebar scope.
 
 ## Building without Xcode
@@ -58,14 +61,18 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
    - `Clipboard/ClipboardMonitor.swift`
    - `Clipboard/ClipboardHistoryStore.swift`
    - `Clipboard/ClipboardGroupStore.swift`
+   - `Clipboard/AttachmentStore.swift`
+   - `Clipboard/RetentionSweeper.swift`
    - `Models/ClipboardHistoryItem.swift`
    - `Models/ContentType.swift`
    - `Models/ClipboardGroup.swift`
+   - `Models/RetentionPolicy.swift`
    - `Views/ClipboardPopoverView.swift`
    - `Views/ClipboardHistoryRowView.swift`
    - `Views/SidebarView.swift`
    - `Utilities/ContentTypeDetector.swift`
    - `Utilities/StringHashing.swift`
+   - `Utilities/UserSettings.swift`
 
 ## Frameworks and Settings
 
@@ -95,6 +102,8 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
 - Empty, whitespace-only, and text clips larger than 500 KB are ignored.
 - `ClipboardHistoryStore` persists up to 100 clips at `~/Library/Application Support/com.keyo.KeyClip/clipboard-history.json`.
 - `ClipboardGroupStore` persists user-defined groups at `~/Library/Application Support/com.keyo.KeyClip/clipboard-groups.json` and prunes orphaned item IDs whenever a clip is dropped from history.
+- `AttachmentStore` writes images and RTF payloads to `~/Library/Application Support/com.keyo.KeyClip/attachments/` and is used for both display thumbnails and pasteboard restoration. Attachments are deleted alongside their owning history item.
+- `RetentionSweeper` runs once at launch and every 30 minutes thereafter (and immediately when the policy changes) to drop items older than the configured `RetentionPolicy`. Items belonging to any custom group are exempt.
 - Duplicate clips are detected by SHA-256 hash after normalizing line endings for hashing only, while preserving the original clipboard content.
 - `ContentTypeDetector` inspects each clip and the pasteboard to assign one of: Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code. Image / File / Files cases exist in the model but are not produced by the current text-only monitor.
 - The history JSON is forward-compatible: clips written before the type field existed decode as `.text`.

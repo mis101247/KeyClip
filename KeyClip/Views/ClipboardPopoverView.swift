@@ -3,11 +3,54 @@ import SwiftUI
 struct ClipboardPopoverView: View {
     @ObservedObject var store: ClipboardHistoryStore
     @ObservedObject var groupStore: ClipboardGroupStore
+    @ObservedObject var settings: UserSettings
     @State private var searchQuery = ""
     @State private var sidebarSelection: SidebarSelection = .all
 
+    let attachmentStore: AttachmentStore
     let onSelect: (ClipboardHistoryItem) -> Void
     let onClose: () -> Void
+
+    private let popoverWidth: CGFloat = 600
+    private let popoverHeight: CGFloat = 520
+    private let contentWidth: CGFloat = 420
+    private let paneSpacing: CGFloat = 0
+    private let headerSpacing: CGFloat = 12
+    private let headerHorizontalPadding: CGFloat = 16
+    private let headerTopPadding: CGFloat = 12
+    private let headerBottomPadding: CGFloat = 12
+    private let headerDividerHeight: CGFloat = 1
+    private let headerDividerOpacity: Double = 0.08
+    private let countHorizontalPadding: CGFloat = 8
+    private let countVerticalPadding: CGFloat = 4
+    private let searchSpacing: CGFloat = 8
+    private let searchIconSize: CGFloat = 13
+    private let searchHorizontalPadding: CGFloat = 10
+    private let searchVerticalPadding: CGFloat = 8
+    private let searchCornerRadius: CGFloat = 8
+    private let subtleBackgroundOpacity: Double = 0.04
+    private let listSpacing: CGFloat = 0
+    private let listHorizontalPadding: CGFloat = 16
+    private let listVerticalPadding: CGFloat = 12
+    private let rowWhitespacePadding: CGFloat = 2
+    private let rowWhitespaceHeight: CGFloat = 0
+    private let footerHorizontalPadding: CGFloat = 16
+    private let footerTopPadding: CGFloat = 12
+    private let footerBottomPadding: CGFloat = 10
+    private let footerGearSize: CGFloat = 14
+    private let emptyStateSpacing: CGFloat = 8
+    private let emptyStateIconSize: CGFloat = 28
+    private let emptyStatePadding: CGFloat = 24
+    private let hiddenHotkeySize: CGFloat = 0
+    private let hiddenHotkeyOpacity: Double = 0
+
+    private var countFont: Font {
+        .system(.caption2, design: .monospaced).monospacedDigit()
+    }
+
+    private var retentionHintFont: Font {
+        .system(.caption2)
+    }
 
     private var trimmedSearchQuery: String {
         searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -55,70 +98,67 @@ struct ClipboardPopoverView: View {
 
     var body: some View {
         ZStack {
-            Color(nsColor: .controlBackgroundColor)
+            Rectangle()
+                .fill(.regularMaterial)
                 .ignoresSafeArea()
 
-            HStack(spacing: 0) {
+            HStack(spacing: paneSpacing) {
                 SidebarView(
                     historyStore: store,
                     groupStore: groupStore,
                     selection: $sidebarSelection
                 )
 
-                VStack(spacing: 0) {
+                VStack(spacing: paneSpacing) {
                     header
 
                     listSection
 
                     footer
                 }
-                .frame(width: 420, height: 520)
+                .frame(width: contentWidth, height: popoverHeight)
             }
-            .frame(width: 600, height: 520)
+            .frame(width: popoverWidth, height: popoverHeight)
 
             hotkeyButtons
         }
-        .frame(width: 600, height: 520)
+        .frame(width: popoverWidth, height: popoverHeight)
         .onExitCommand {
             onClose()
         }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: headerSpacing) {
             HStack {
                 Text(listTitle)
-                    .font(.headline)
+                    .font(.system(.subheadline, weight: .semibold))
 
                 Spacer()
 
                 Text("\(filteredItems.count)")
-                    .font(.caption.monospacedDigit())
+                    .font(countFont)
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule()
-                            .fill(Color(nsColor: .quaternaryLabelColor))
-                    )
+                    .padding(.horizontal, countHorizontalPadding)
+                    .padding(.vertical, countVerticalPadding)
             }
 
             searchField
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 10)
-        .padding(.bottom, 10)
+        .padding(.horizontal, headerHorizontalPadding)
+        .padding(.top, headerTopPadding)
+        .padding(.bottom, headerBottomPadding)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(height: 1)
+                .fill(Color.primary.opacity(headerDividerOpacity))
+                .frame(height: headerDividerHeight)
         }
     }
 
     private var searchField: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: searchSpacing) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: searchIconSize, weight: .medium))
                 .foregroundStyle(.secondary)
 
             TextField("Search clipboard…", text: $searchQuery)
@@ -135,11 +175,11 @@ struct ClipboardPopoverView: View {
                 .help("Clear search")
             }
         }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 7)
+        .padding(.horizontal, searchHorizontalPadding)
+        .padding(.vertical, searchVerticalPadding)
         .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(Color(nsColor: .textBackgroundColor))
+            RoundedRectangle(cornerRadius: searchCornerRadius)
+                .fill(Color.primary.opacity(subtleBackgroundOpacity))
         )
     }
 
@@ -174,12 +214,13 @@ struct ClipboardPopoverView: View {
             )
         } else {
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: listSpacing) {
                     ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
                         ClipboardHistoryRowView(
                             item: item,
                             shortcutLabel: shortcutLabel(for: index),
                             groupStore: groupStore,
+                            attachmentStore: attachmentStore,
                             onCopy: { onSelect(item) }
                         )
                         .contentShape(Rectangle())
@@ -188,38 +229,59 @@ struct ClipboardPopoverView: View {
                         }
 
                         if index < filteredItems.count - 1 {
-                            Divider()
-                                .overlay(Color(nsColor: .separatorColor))
-                                .padding(.horizontal, 12)
+                            Color.clear
+                                .frame(height: rowWhitespaceHeight)
+                                .padding(.vertical, rowWhitespacePadding)
                         }
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.horizontal, listHorizontalPadding)
+                .padding(.vertical, listVerticalPadding)
             }
         }
     }
 
     private var footer: some View {
         HStack {
-            Button("Clear History") {
-                store.clear()
-            }
-            .disabled(store.items.isEmpty)
+            Button("Clear History") { store.clear() }
+                .disabled(store.items.isEmpty)
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
 
             Spacer()
 
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
+            Menu {
+                Section("Keep History For") {
+                    ForEach(RetentionPolicy.allCases) { policy in
+                        Button {
+                            settings.retentionPolicy = policy
+                        } label: {
+                            if settings.retentionPolicy == policy {
+                                Label(policy.displayName, systemImage: "checkmark")
+                            } else {
+                                Text(policy.displayName)
+                            }
+                        }
+                    }
+                }
+                Divider()
+                Text("Items in custom groups never expire")
+                    .font(retentionHintFont)
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: footerGearSize, weight: .regular))
+                    .foregroundStyle(.secondary)
             }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+
+            Button("Quit") { NSApplication.shared.terminate(nil) }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(height: 1)
-        }
+        .padding(.horizontal, footerHorizontalPadding)
+        .padding(.top, footerTopPadding)
+        .padding(.bottom, footerBottomPadding)
     }
 
     private var hotkeyButtons: some View {
@@ -231,8 +293,8 @@ struct ClipboardPopoverView: View {
                 .keyboardShortcut(KeyEquivalent(Character(index == 9 ? "0" : "\(index + 1)")), modifiers: .command)
             }
         }
-        .frame(width: 0, height: 0)
-        .opacity(0)
+        .frame(width: hiddenHotkeySize, height: hiddenHotkeySize)
+        .opacity(hiddenHotkeyOpacity)
         .accessibilityHidden(true)
     }
 
@@ -249,24 +311,24 @@ struct ClipboardPopoverView: View {
     }
 
     private func emptyState(systemImage: String, title: String, hint: String) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: emptyStateSpacing) {
             Spacer(minLength: 0)
 
             Image(systemName: systemImage)
-                .font(.system(size: 32))
+                .font(.system(size: emptyStateIconSize))
                 .foregroundStyle(.secondary)
 
             Text(title)
-                .font(.headline)
+                .font(.system(.subheadline, weight: .semibold))
 
             Text(hint)
-                .font(.caption)
+                .font(.system(.caption2))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(24)
+        .padding(emptyStatePadding)
     }
 }
