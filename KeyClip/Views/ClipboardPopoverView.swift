@@ -273,6 +273,17 @@ struct ClipboardPopoverView: View {
                 Spacer()
 
                 Menu {
+                    Section("Startup") {
+                        Button {
+                            settings.launchAtLogin.toggle()
+                        } label: {
+                            if settings.launchAtLogin {
+                                Label("Launch at Login", systemImage: "checkmark")
+                            } else {
+                                Text("Launch at Login")
+                            }
+                        }
+                    }
                     Section("Keep History For") {
                         ForEach(RetentionPolicy.allCases) { policy in
                             Button {
