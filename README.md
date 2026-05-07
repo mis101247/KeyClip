@@ -58,3 +58,7 @@ To reset everything, quit KeyClip and delete that folder.
 ## Development
 
 See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for build details, source layout, and architecture notes.
+
+## License
+
+[MIT](./LICENSE) © Keyo
