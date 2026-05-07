@@ -13,7 +13,7 @@ struct ClipboardHistoryRowView: View {
     private let previewCharacterLimit = 150
     private let rowSpacing: CGFloat = 5
     private let previewSpacing: CGFloat = 8
-    private let metadataSpacing: CGFloat = 4
+    private let metadataSpacing: CGFloat = 5
     private let rowHorizontalPadding: CGFloat = 12
     private let rowVerticalPadding: CGFloat = 8
     private let rowMinHeight: CGFloat = 52
@@ -186,12 +186,12 @@ struct ClipboardHistoryRowView: View {
             chunks.append(AnyView(oversizeChip))
         }
 
+        chunks.append(AnyView(Text(relativeTimestamp)))
+        chunks.append(AnyView(Text(item.type.displayName)))
+
         if item.sourceAppBundleID != nil {
             chunks.append(AnyView(sourceAppChip))
         }
-
-        chunks.append(AnyView(Text(relativeTimestamp)))
-        chunks.append(AnyView(Text(item.type.displayName)))
 
         if !membershipGroups.isEmpty {
             chunks.append(AnyView(groupChips))
@@ -203,10 +203,11 @@ struct ClipboardHistoryRowView: View {
     private var oversizeChip: some View {
         HStack(spacing: 3) {
             Image(systemName: "exclamationmark.triangle.fill")
-            Text("Auto-deletes in 24h")
+            Text("24h")
         }
         .font(.system(.caption2))
         .foregroundStyle(.orange)
+        .help("Auto-deletes after 24 hours")
     }
 
     @ViewBuilder
@@ -217,11 +218,11 @@ struct ClipboardHistoryRowView: View {
                     Image(nsImage: icon)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 12, height: 12)
+                        .frame(width: 10, height: 10)
                 } else {
                     Image(systemName: "app.dashed")
                         .font(.system(size: 10, weight: .medium))
-                        .frame(width: 12, height: 12)
+                        .frame(width: 10, height: 10)
                 }
 
                 Text(item.sourceAppName ?? bundleID)
@@ -229,7 +230,7 @@ struct ClipboardHistoryRowView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .frame(maxWidth: 80, alignment: .leading)
+                    .frame(maxWidth: 70, alignment: .leading)
             }
             .help(item.sourceAppName ?? bundleID)
         } else {
@@ -265,7 +266,8 @@ private struct MetadataLine: View {
                 if index > 0 {
                     Text("·")
                         .font(.system(.caption2))
-                        .foregroundStyle(.tertiary)
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.primary.opacity(0.18))
                 }
 
                 chunk
