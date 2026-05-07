@@ -12,6 +12,7 @@ final class ClipboardMonitor {
     private var timer: Timer?
     private var lastChangeCount: Int
     private var isWritingFromHistory = false
+    private(set) var isPaused = false
 
     init(
         pasteboard: NSPasteboard = .general,
@@ -35,6 +36,18 @@ final class ClipboardMonitor {
     func stop() {
         timer?.invalidate()
         timer = nil
+    }
+
+    func pause() {
+        isPaused = true
+    }
+
+    func resume() {
+        isPaused = false
+    }
+
+    func togglePaused() {
+        isPaused.toggle()
     }
 
     func writeToPasteboard(_ content: String) {
@@ -63,6 +76,11 @@ final class ClipboardMonitor {
     }
 
     private func pollPasteboard() {
+        guard !isPaused else {
+            lastChangeCount = pasteboard.changeCount
+            return
+        }
+
         let currentChangeCount = pasteboard.changeCount
         guard currentChangeCount != lastChangeCount else { return }
 

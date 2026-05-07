@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum SidebarSelection: Hashable {
     case all
@@ -15,6 +16,7 @@ struct SidebarView: View {
     @State private var newGroupName = ""
     @State private var renamingGroupID: UUID?
     @State private var renameDraft = ""
+    @State private var dropTargetGroupID: UUID?
     @FocusState private var focusedField: FocusedField?
 
     private let sidebarWidth: CGFloat = 180
@@ -162,6 +164,11 @@ struct SidebarView: View {
             count: group.itemIDs.count,
             tintColor: .secondary,
             isSelected: selection == .group(group.id),
+            backgroundFill: dropTargetGroupID == group.id
+                ? Color.accentColor.opacity(0.18)
+                : (selection == .group(group.id)
+                    ? Color.accentColor.opacity(0.12)
+                    : Color.clear),
             trailingMenu: {
                 groupActionsMenu(for: group, labelStyle: .ellipsis)
             },
@@ -171,6 +178,14 @@ struct SidebarView: View {
         )
         .contextMenu {
             groupActionItems(for: group)
+        }
+        .onDrop(of: [UTType.text.identifier], isTargeted: Binding(
+            get: { dropTargetGroupID == group.id },
+            set: { isTarget in
+                dropTargetGroupID = isTarget ? group.id : (dropTargetGroupID == group.id ? nil : dropTargetGroupID)
+            }
+        )) { providers in
+            handleDrop(providers: providers, into: group.id)
         }
     }
 
@@ -287,6 +302,17 @@ struct SidebarView: View {
         renameDraft = ""
         focusedField = nil
     }
+
+    private func handleDrop(providers: [NSItemProvider], into groupID: UUID) -> Bool {
+        guard let provider = providers.first else { return false }
+        provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let raw = object as? String, let id = UUID(uuidString: raw) else { return }
+            DispatchQueue.main.async {
+                groupStore.addItem(id, to: groupID)
+            }
+        }
+        return true
+    }
 }
 
 private struct SectionHeader<Trailing: View>: View {
@@ -333,6 +359,7 @@ private struct SidebarRow<TrailingMenu: View>: View {
     let count: Int
     let tintColor: Color
     let isSelected: Bool
+    let backgroundFill: Color?
     @ViewBuilder var trailingMenu: () -> TrailingMenu
     let action: () -> Void
 
@@ -375,25 +402,22 @@ private struct SidebarRow<TrailingMenu: View>: View {
             .foregroundStyle(isSelected ? Color.accentColor : .primary)
             .padding(.horizontal, rowHorizontalPadding)
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
-            .background(rowBackground)
+            .background(
+                RoundedRectangle(cornerRadius: rowCornerRadius)
+                    .fill(
+                        backgroundFill
+                            ?? (isSelected
+                                ? Color.accentColor.opacity(selectedBackgroundOpacity)
+                                : (isHovered
+                                    ? Color.primary.opacity(hoverBackgroundOpacity)
+                                    : Color.clear))
+                    )
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
         .padding(.horizontal, rowOuterHorizontalPadding)
-    }
-
-    @ViewBuilder
-    private var rowBackground: some View {
-        if isSelected {
-            RoundedRectangle(cornerRadius: rowCornerRadius)
-                .fill(Color.accentColor.opacity(selectedBackgroundOpacity))
-        } else if isHovered {
-            RoundedRectangle(cornerRadius: rowCornerRadius)
-                .fill(Color.primary.opacity(hoverBackgroundOpacity))
-        } else {
-            Color.clear
-        }
     }
 }
 
@@ -412,6 +436,7 @@ private extension SidebarRow where TrailingMenu == EmptyView {
             count: count,
             tintColor: tintColor,
             isSelected: isSelected,
+            backgroundFill: nil,
             trailingMenu: {
                 EmptyView()
             },

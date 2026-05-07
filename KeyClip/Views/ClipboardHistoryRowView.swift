@@ -175,6 +175,9 @@ struct ClipboardHistoryRowView: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .onDrag {
+            NSItemProvider(object: item.id.uuidString as NSString)
+        }
     }
 
     @ViewBuilder
