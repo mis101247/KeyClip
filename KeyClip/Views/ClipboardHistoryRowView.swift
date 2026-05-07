@@ -58,6 +58,10 @@ struct ClipboardHistoryRowView: View {
             || item.content.first?.isWhitespace == true
     }
 
+    private var membershipGroups: [ClipboardGroup] {
+        groupStore.groupsContaining(itemID: item.id)
+    }
+
     private var previewFont: Font {
         if item.type == .code {
             return .system(.callout, design: .monospaced)
@@ -100,6 +104,27 @@ struct ClipboardHistoryRowView: View {
                 Text("·")
 
                 Text(item.type.displayName)
+
+                if !membershipGroups.isEmpty {
+                    Text("·")
+                        .font(.system(.caption2))
+                        .foregroundStyle(.tertiary)
+
+                    HStack(spacing: 3) {
+                        ForEach(membershipGroups.prefix(3)) { group in
+                            Image(systemName: group.systemImage)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if membershipGroups.count > 3 {
+                            Text("+\(membershipGroups.count - 3)")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .help(membershipGroups.map(\.name).joined(separator: ", "))
+                }
             }
             .font(.system(.caption2))
             .foregroundStyle(.secondary)

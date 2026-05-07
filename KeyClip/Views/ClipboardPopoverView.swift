@@ -85,6 +85,14 @@ struct ClipboardPopoverView: View {
         }
     }
 
+    private var protectedIDs: Set<UUID> {
+        Set(groupStore.groups.flatMap(\.itemIDs))
+    }
+
+    private var clearableItems: [ClipboardHistoryItem] {
+        sidebarFilteredItems.filter { !protectedIDs.contains($0.id) }
+    }
+
     private var listTitle: String {
         switch sidebarSelection {
         case .all:
@@ -99,29 +107,29 @@ struct ClipboardPopoverView: View {
     private var clearScopeLabel: String {
         switch sidebarSelection {
         case .all:
-            return "Clear History"
+            return "Clear Unfiled"
         case .contentType(let type):
             return "Clear \(type.displayName)"
-        case .group(let id):
-            if let group = groupStore.groups.first(where: { $0.id == id }) {
-                return "Clear \(group.name)"
-            }
-            return "Clear"
+        case .group:
+            return ""
         }
     }
 
-    private var clearScopeIsEmpty: Bool {
-        sidebarFilteredItems.isEmpty
+    private var shouldShowClearButton: Bool {
+        if case .group = sidebarSelection {
+            return false
+        }
+
+        return true
     }
 
     private func performScopedClear() {
-        switch sidebarSelection {
-        case .all:
-            store.clear()
-        case .contentType, .group:
-            let ids = sidebarFilteredItems.map(\.id)
-            store.remove(ids: ids)
+        let ids = clearableItems.map(\.id)
+        guard !ids.isEmpty else {
+            return
         }
+
+        store.remove(ids: ids)
     }
 
     var body: some View {
@@ -272,12 +280,14 @@ struct ClipboardPopoverView: View {
 
     private var footer: some View {
         HStack {
-            Button(clearScopeLabel) {
-                performScopedClear()
+            if shouldShowClearButton {
+                Button(clearScopeLabel) {
+                    performScopedClear()
+                }
+                    .disabled(clearableItems.isEmpty)
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.secondary)
             }
-                .disabled(clearScopeIsEmpty)
-                .buttonStyle(.borderless)
-                .foregroundStyle(.secondary)
 
             Spacer()
 
