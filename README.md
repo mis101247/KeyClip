@@ -1,109 +1,60 @@
 # KeyClip
 
-KeyClip is a small macOS menu bar clipboard manager built with Swift and SwiftUI. It polls the general pasteboard, stores recent text clips locally as JSON, shows history in a status item popover, and lets you restore a previous entry without re-adding it to history.
+A calm, fast clipboard manager that lives in your macOS menu bar.
 
-## Features
+<img src="https://github.com/user-attachments/assets/b3bd83c5-dde3-47b5-9214-d450418fb817" alt="KeyClip popover screenshot" width="620" />
 
-- **Quick paste shortcuts** — `⌘1`–`⌘9` and `⌘0` jump to the first 10 visible items.
-- **Content type detection** — Each clip is classified as Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code; the row shows a colored type icon and label.
-- **Image clips** — Copy any image (PNG / TIFF) and KeyClip stores a thumbnail; selecting it writes the original PNG bytes back to the pasteboard.
-- **Rich text preservation** — Formatted clips keep their `.rtf` payload, so pasting again restores the original styling, not just the plain text.
-- **Sidebar filtering** — Left sidebar lists every populated content type with a live count, so you can narrow the list to (for example) only Links or only Code.
-- **Custom groups** — Create your own folders, right-click any clip and pick **Add to Group** to file it. Groups persist across launches.
-- **Retention policy** — Footer gear menu lets you keep history Forever / 1 Day / 7 Days / 30 Days. Items in any custom group are exempt from expiry.
-- **Search** — Case- and diacritic-insensitive substring match across the current sidebar scope.
+KeyClip remembers what you copy — text, rich text with formatting, images, links, code, and more — and brings it back with a keystroke. Items you care about can be filed into custom groups so they stick around; everything else cleans itself up on a schedule you choose.
 
-## Building without Xcode
+## Highlights
 
-This repository includes a Swift Package Manager manifest and a small bundle script so you can build the app from Terminal with Xcode Command Line Tools only.
+- **⇧⌘V from anywhere** to open the popover
+- **⌘1 – ⌘0** quick-paste the first ten visible clips
+- **Auto-detected content types** (Text, Rich Text, Image, Link, Code, Email, Phone, Color, Emoji) shown with colored icons
+- **Custom groups** — drag any clip in, or right-click → *Add to Group*. Items in groups never expire and are skipped by Clear
+- **Source app** label on every clip so you remember where it came from
+- **Retention policy** (Forever / 1 / 7 / 30 days) configurable from the gear menu
+- **Pause** the clipboard from the status item right-click menu when you don't want anything captured
 
-Prerequisite:
+## Install
 
-```sh
-xcode-select --install
-```
-
-Build and assemble the `.app` bundle:
+### Build it yourself (no Xcode app required)
 
 ```sh
+xcode-select --install   # one-time
+git clone https://github.com/mis101247/KeyClip.git
 cd KeyClip
 ./build.sh
 open KeyClip.app
 ```
 
-On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require right-clicking `KeyClip.app` and choosing **Open** the first time.
+The first launch on a Gatekeeper-strict Mac may need a right-click → **Open** because the local build is unsigned.
 
-## Prerequisites
+## Use
 
-- Xcode 15 or newer
-- macOS 13 or newer
-- An Apple Developer account or local signing identity for running the app
+- Click the clipboard icon in the menu bar (or press **⇧⌘V**) to open the popover.
+- Copy anything from any app — KeyClip captures it and the menu bar icon briefly fills in to confirm.
+- Click a clip (or press **⌘1**–**⌘9** / **⌘0**) to put it back on the pasteboard.
+- Right-click a clip for **Copy**, **Add to Group**, or **Delete**.
+- Right-click the menu bar icon for **Pause Clipboard** and **Quit**.
 
-## Create the Xcode Project
+## Limits
 
-1. Open Xcode and choose **File > New > Project**.
-2. Select **macOS > App**.
-3. Set **Product Name** to `KeyClip`.
-4. Set **Bundle Identifier** to `com.keyo.KeyClip`.
-5. Set **Interface** to `SwiftUI`.
-6. Set **Language** to `Swift`.
-7. Leave **Use Core Data** unchecked.
-8. Save the project inside this repository's `KeyClip` folder.
+- Up to 100 clips of recent history (groups don't count toward this).
+- Each clip up to 100 MB. Anything between 10 MB and 100 MB is kept for only 24 hours and shows a small "24h" warning badge.
+- Custom groups have no size limit and never expire.
 
-## Add the Provided Source Files
+## Where data lives
 
-1. Delete Xcode's generated `ContentView.swift`.
-2. Keep the generated app target, but replace the generated app entry point with the provided `KeyClipApp.swift`.
-3. Add every file from the `KeyClip/` source folder in this repository to the app target:
-   - `KeyClipApp.swift`
-   - `AppDelegate.swift`
-   - `Controllers/MenuBarController.swift`
-   - `Clipboard/ClipboardMonitor.swift`
-   - `Clipboard/ClipboardHistoryStore.swift`
-   - `Clipboard/ClipboardGroupStore.swift`
-   - `Clipboard/AttachmentStore.swift`
-   - `Clipboard/RetentionSweeper.swift`
-   - `Models/ClipboardHistoryItem.swift`
-   - `Models/ContentType.swift`
-   - `Models/ClipboardGroup.swift`
-   - `Models/RetentionPolicy.swift`
-   - `Views/ClipboardPopoverView.swift`
-   - `Views/ClipboardHistoryRowView.swift`
-   - `Views/SidebarView.swift`
-   - `Utilities/ContentTypeDetector.swift`
-   - `Utilities/StringHashing.swift`
-   - `Utilities/UserSettings.swift`
+```
+~/Library/Application Support/com.keyo.KeyClip/
+├── clipboard-history.json
+├── clipboard-groups.json
+└── attachments/        # images and RTF payloads
+```
 
-## Frameworks and Settings
+To reset everything, quit KeyClip and delete that folder.
 
-1. In the app target, open **General > Frameworks, Libraries, and Embedded Content**.
-2. Add `CryptoKit.framework`.
-3. Open the app target's `Info.plist`.
-4. Add `Application is agent (UIElement)` with Boolean value `YES`.
-   - Raw key: `LSUIElement`
-5. Open **Signing & Capabilities**.
-6. Select your team and verify the bundle identifier is `com.keyo.KeyClip`.
-7. Enable automatic signing unless your environment requires manual signing.
+## Development
 
-## Build and Run
-
-1. Select the `KeyClip` scheme.
-2. Choose a macOS run destination.
-3. Press **Command-R**.
-4. The app appears only in the menu bar with a clipboard icon.
-5. Copy text from any app, then click the menu bar icon to view clipboard history.
-6. Click a history row to write that item back to the pasteboard and close the popover.
-
-## Implementation Notes
-
-- The app uses a SwiftUI `@main` app with only a `Settings` scene, so no standard window opens.
-- `AppDelegate` sets the activation policy to accessory mode and retains the history store, clipboard monitor, and menu bar controller.
-- `ClipboardMonitor` polls `NSPasteboard.general.changeCount` every 0.5 seconds.
-- Empty, whitespace-only, and text clips larger than 500 KB are ignored.
-- `ClipboardHistoryStore` persists up to 100 clips at `~/Library/Application Support/com.keyo.KeyClip/clipboard-history.json`.
-- `ClipboardGroupStore` persists user-defined groups at `~/Library/Application Support/com.keyo.KeyClip/clipboard-groups.json` and prunes orphaned item IDs whenever a clip is dropped from history.
-- `AttachmentStore` writes images and RTF payloads to `~/Library/Application Support/com.keyo.KeyClip/attachments/` and is used for both display thumbnails and pasteboard restoration. Attachments are deleted alongside their owning history item.
-- `RetentionSweeper` runs once at launch and every 30 minutes thereafter (and immediately when the policy changes) to drop items older than the configured `RetentionPolicy`. Items belonging to any custom group are exempt.
-- Duplicate clips are detected by SHA-256 hash after normalizing line endings for hashing only, while preserving the original clipboard content.
-- `ContentTypeDetector` inspects each clip and the pasteboard to assign one of: Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code. Image / File / Files cases exist in the model but are not produced by the current text-only monitor.
-- The history JSON is forward-compatible: clips written before the type field existed decode as `.text`.
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for build details, source layout, and architecture notes.
