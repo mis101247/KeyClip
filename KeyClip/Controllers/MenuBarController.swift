@@ -37,7 +37,7 @@ final class MenuBarController: NSObject {
                 systemSymbolName: "doc.on.clipboard",
                 accessibilityDescription: "Clipboard History"
             )
-            button.action = #selector(togglePopover(_:))
+            button.action = #selector(togglePopoverFromStatusItem(_:))
             button.target = self
         }
     }
@@ -80,12 +80,16 @@ final class MenuBarController: NSObject {
         )
     }
 
-    @objc private func togglePopover(_ sender: AnyObject?) {
+    func togglePopover() {
         if popover.isShown {
             closePopover()
         } else {
             showPopover()
         }
+    }
+
+    @objc private func togglePopoverFromStatusItem(_ sender: AnyObject?) {
+        togglePopover()
     }
 
     private func showPopover() {

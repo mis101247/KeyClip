@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -10,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var retentionSweeper: RetentionSweeper?
     private var cancellable: AnyCancellable?
+    private var globalHotkey: GlobalHotkey?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -56,5 +58,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController = controller
 
         monitor.start()
+
+        let hotkey = GlobalHotkey(
+            keyCode: UInt32(kVK_ANSI_V),
+            modifiers: UInt32(cmdKey | shiftKey),
+            onTrigger: { [weak controller] in controller?.togglePopover() }
+        )
+        hotkey.register()
+        self.globalHotkey = hotkey
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        globalHotkey?.unregister()
     }
 }

@@ -34,6 +34,7 @@ let package = Package(
                 "Views/ClipboardPopoverView.swift",
                 "Views/ClipboardHistoryRowView.swift",
                 "Utilities/ContentTypeDetector.swift",
+                "Utilities/GlobalHotkey.swift",
                 "Utilities/StringHashing.swift",
                 "Utilities/UserSettings.swift"
             ]

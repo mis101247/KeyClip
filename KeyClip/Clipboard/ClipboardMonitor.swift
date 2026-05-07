@@ -2,6 +2,10 @@ import AppKit
 import CryptoKit
 
 final class ClipboardMonitor {
+    private static let maxTextBytes = 500 * 1024
+    private static let maxRichTextBytes = 1024 * 1024
+    private static let maxImageBytes = 10 * 1024 * 1024
+
     private let pasteboard: NSPasteboard
     private let onNewText: (String, ContentType, Data?) -> Void
     private let onNewImage: (Data, String, CGSize) -> Void
@@ -69,6 +73,11 @@ final class ClipboardMonitor {
         }
 
         if let image = readImageFromPasteboard() {
+            guard image.data.count <= Self.maxImageBytes else {
+                NSLog("Skipping oversize image clip: \(image.data.count) bytes")
+                return
+            }
+
             let contentHash = sha256HexHash(image.data)
             onNewImage(image.data, contentHash, image.dimensions)
             return
@@ -79,8 +88,11 @@ final class ClipboardMonitor {
             return
         }
 
-        let rtfData: Data? = pasteboard.data(forType: .rtf)
-        let type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
+        let rtfData = sanitizedRtfData(pasteboard.data(forType: .rtf))
+        var type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
+        if type == .richText && rtfData == nil {
+            type = .text
+        }
         onNewText(content, type, rtfData)
     }
 
@@ -114,10 +126,15 @@ final class ClipboardMonitor {
         return digest.map { String(format: "%02x", $0) }.joined()
     }
 
+    private func sanitizedRtfData(_ data: Data?) -> Data? {
+        guard let data, data.count <= Self.maxRichTextBytes else { return nil }
+        return data
+    }
+
     private func isValidClipboardContent(_ content: String) -> Bool {
         guard !content.isEmpty else { return false }
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
-        guard content.utf8.count <= 500 * 1024 else { return false }
+        guard content.utf8.count <= Self.maxTextBytes else { return false }
 
         return true
     }

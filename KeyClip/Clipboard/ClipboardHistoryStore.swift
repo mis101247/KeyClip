@@ -87,6 +87,11 @@ final class ClipboardHistoryStore: ObservableObject {
     }
 
     func addImage(data: Data, hash: String, dimensions: CGSize) {
+        guard data.count <= 10 * 1024 * 1024 else {
+            NSLog("Skipping oversize image: \(data.count) bytes")
+            return
+        }
+
         if let existingIndex = items.firstIndex(where: { $0.contentHash == hash }) {
             let existingItem = items.remove(at: existingIndex)
             items.insert(existingItem, at: 0)
