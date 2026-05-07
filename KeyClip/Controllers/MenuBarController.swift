@@ -10,6 +10,7 @@ final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
     private let popover: NSPopover
     private var globalClickMonitor: Any?
+    private var flashTimer: Timer?
 
     init(
         store: ClipboardHistoryStore,
@@ -34,6 +35,7 @@ final class MenuBarController: NSObject {
     }
 
     deinit {
+        flashTimer?.invalidate()
         removeGlobalClickMonitor()
     }
 
@@ -121,6 +123,19 @@ final class MenuBarController: NSObject {
 
     @objc private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    func flashCaptureFeedback() {
+        guard let button = statusItem.button, !monitor.isPaused else { return }
+        flashTimer?.invalidate()
+        button.image = NSImage(
+            systemSymbolName: "doc.on.clipboard.fill",
+            accessibilityDescription: "Captured"
+        )
+        button.alphaValue = 1.0
+        flashTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { [weak self] _ in
+            self?.updateStatusItemAppearance()
+        }
     }
 
     private func updateStatusItemAppearance() {

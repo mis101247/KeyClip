@@ -52,6 +52,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             attachmentStore: attachmentStore,
             settings: settings
         )
+        store.onItemCaptured = { [weak controller] in
+            DispatchQueue.main.async {
+                controller?.flashCaptureFeedback()
+            }
+        }
 
         historyStore = store
         clipboardMonitor = monitor

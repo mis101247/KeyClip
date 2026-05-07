@@ -4,6 +4,7 @@ import Foundation
 final class ClipboardHistoryStore: ObservableObject {
     @Published private(set) var items: [ClipboardHistoryItem] = []
     var onItemsRemoved: (([UUID]) -> Void)?
+    var onItemCaptured: (() -> Void)?
 
     private let maxItems = 100
     private let fileURL: URL
@@ -54,6 +55,7 @@ final class ClipboardHistoryStore: ObservableObject {
 
         enforceMaxItems()
         save()
+        onItemCaptured?()
     }
 
     private func upgradedRTFAttachmentFilename(
@@ -131,6 +133,7 @@ final class ClipboardHistoryStore: ObservableObject {
 
         enforceMaxItems()
         save()
+        onItemCaptured?()
     }
 
     private func enforceMaxItems() {
