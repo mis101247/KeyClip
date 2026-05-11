@@ -9,8 +9,17 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
     let attachmentFilename: String?
     let attachmentKind: AttachmentKind?
     let isOversize: Bool
+    var title: String?
     var sourceAppBundleID: String?
     var sourceAppName: String?
+
+    var hasTitle: Bool {
+        guard let title = title?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+
+        return !title.isEmpty
+    }
 
     init(
         id: UUID,
@@ -21,6 +30,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         attachmentFilename: String? = nil,
         attachmentKind: AttachmentKind? = nil,
         isOversize: Bool = false,
+        title: String? = nil,
         sourceAppBundleID: String? = nil,
         sourceAppName: String? = nil
     ) {
@@ -32,13 +42,14 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.attachmentFilename = attachmentFilename
         self.attachmentKind = attachmentKind
         self.isOversize = isOversize
+        self.title = title
         self.sourceAppBundleID = sourceAppBundleID
         self.sourceAppName = sourceAppName
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, content, createdAt, contentHash, type, attachmentFilename, attachmentKind, isOversize
-        case sourceAppBundleID, sourceAppName
+        case title, sourceAppBundleID, sourceAppName
     }
 
     init(from decoder: Decoder) throws {
@@ -51,6 +62,7 @@ struct ClipboardHistoryItem: Identifiable, Codable, Equatable {
         self.attachmentFilename = try container.decodeIfPresent(String.self, forKey: .attachmentFilename)
         self.attachmentKind = try container.decodeIfPresent(AttachmentKind.self, forKey: .attachmentKind)
         self.isOversize = try container.decodeIfPresent(Bool.self, forKey: .isOversize) ?? false
+        self.title = try container.decodeIfPresent(String.self, forKey: .title)
         self.sourceAppBundleID = try container.decodeIfPresent(String.self, forKey: .sourceAppBundleID)
         self.sourceAppName = try container.decodeIfPresent(String.self, forKey: .sourceAppName)
     }

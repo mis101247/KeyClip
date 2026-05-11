@@ -11,6 +11,10 @@ final class ClipboardHistoryStore: ObservableObject {
     private let fileURL: URL
     private let attachments: AttachmentStore
 
+    var titledItemIDs: Set<UUID> {
+        Set(items.filter(\.hasTitle).map(\.id))
+    }
+
     init(fileURL: URL? = nil, attachments: AttachmentStore = AttachmentStore()) {
         if let fileURL {
             self.fileURL = fileURL
@@ -44,6 +48,7 @@ final class ClipboardHistoryStore: ObservableObject {
                 attachmentFilename: rtfAttachmentFilename ?? existingItem.attachmentFilename,
                 attachmentKind: rtfAttachmentFilename == nil ? existingItem.attachmentKind : .rtf,
                 isOversize: isOversize,
+                title: existingItem.title,
                 sourceAppBundleID: sourceAppBundleID,
                 sourceAppName: sourceAppName
             )
@@ -126,6 +131,7 @@ final class ClipboardHistoryStore: ObservableObject {
                 attachmentFilename: existingItem.attachmentFilename,
                 attachmentKind: existingItem.attachmentKind,
                 isOversize: isOversize,
+                title: existingItem.title,
                 sourceAppBundleID: sourceAppBundleID,
                 sourceAppName: sourceAppName
             )
@@ -217,7 +223,15 @@ final class ClipboardHistoryStore: ObservableObject {
         save()
     }
 
-    /// Remove items with createdAt before cutoff, exempting protectedIDs (items in custom groups).
+    func updateTitle(id: UUID, title: String) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        items[index].title = trimmedTitle.isEmpty ? nil : trimmedTitle
+        save()
+    }
+
+    /// Remove items with createdAt before cutoff, exempting protectedIDs.
     func sweepExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
         let toRemove = items.filter { item in
             item.createdAt < cutoff && !protectedIDs.contains(item.id)
@@ -230,7 +244,7 @@ final class ClipboardHistoryStore: ObservableObject {
         save()
     }
 
-    /// Remove oversize items older than cutoff, exempting protectedIDs (items in custom groups).
+    /// Remove oversize items older than cutoff, exempting protectedIDs.
     func sweepOversizeExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
         let toRemove = items.filter { item in
             item.isOversize && item.createdAt < cutoff && !protectedIDs.contains(item.id)

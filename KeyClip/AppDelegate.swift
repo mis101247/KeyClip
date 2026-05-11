@@ -18,8 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let store = ClipboardHistoryStore(attachments: attachmentStore)
         groupStore = ClipboardGroupStore()
-        store.protectedIDsProvider = { [weak groupStore] in
-            Set(groupStore?.groups.flatMap(\.itemIDs) ?? [])
+        store.protectedIDsProvider = { [weak store, weak groupStore] in
+            let groupedIDs = Set(groupStore?.groups.flatMap(\.itemIDs) ?? [])
+            let titledIDs = store?.titledItemIDs ?? []
+            return groupedIDs.union(titledIDs)
         }
         store.onItemsRemoved = { [weak groupStore] ids in
             groupStore?.purgeItems(ids)

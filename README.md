@@ -14,6 +14,7 @@ Items you care about can be filed into custom groups so they stick around; every
 - **⌘1 – ⌘0** quick-paste the first ten visible clips
 - **Local-only by design** — no cloud sync, no analytics, no telemetry, and no network access from the app
 - **Auto-detected content types** (Text, Rich Text, Image, Link, Code, Email, Phone, Color, Emoji) shown with colored icons
+- **Item titles** — add a short note to any clip so you know why you saved it later; titled items automatically appear in the built-in **Tags** group
 - **Custom groups** — drag any clip in, or right-click → *Add to Group*. Items in groups never expire and are skipped by Clear
 - **Source app** label on every clip so you remember where it came from
 - **Retention policy** (Forever / 1 / 7 / 30 days) configurable from the gear menu
@@ -38,14 +39,14 @@ The first launch on a Gatekeeper-strict Mac may need a right-click → **Open** 
 - Click the clipboard icon in the menu bar (or press **⇧⌘V**) to open the popover.
 - Copy anything from any app — KeyClip captures it and the menu bar icon briefly fills in to confirm.
 - Click a clip (or press **⌘1**–**⌘9** / **⌘0**) to put it back on the pasteboard.
-- Right-click a clip for **Copy**, **Add to Group**, or **Delete**.
+- Right-click a clip for **Copy**, **Add Title**, **Add to Group**, or **Delete**. Items with titles automatically show up under **Tags**.
 - Right-click the menu bar icon for **Pause Clipboard** and **Quit**.
 
 ## Limits
 
 - Up to 100 clips of recent history (groups don't count toward this).
 - Each clip up to 100 MB. Anything between 10 MB and 100 MB is kept for only 24 hours and shows a small "24h" warning badge.
-- Custom groups have no size limit and never expire.
+- The built-in Tags group and custom groups have no size limit and never expire.
 
 ## Where data lives
 

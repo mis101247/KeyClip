@@ -6,9 +6,11 @@ struct ClipboardHistoryRowView: View {
     @ObservedObject var groupStore: ClipboardGroupStore
     let attachmentStore: AttachmentStore
     let onCopy: () -> Void
+    let onUpdateTitle: (String) -> Void
     let onDelete: () -> Void
 
     @State private var isHovered = false
+    @State private var isEditingTitle = false
 
     private let previewCharacterLimit = 150
     private let rowSpacing: CGFloat = 12
@@ -21,6 +23,15 @@ struct ClipboardHistoryRowView: View {
     private let imagePreviewSize: CGFloat = 36
     private let imagePreviewCornerRadius: CGFloat = 6
     private let shortcutMinWidth: CGFloat = 24
+
+    private var titleText: String? {
+        guard let title = item.title?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !title.isEmpty else {
+            return nil
+        }
+
+        return title
+    }
 
     private var previewText: String {
         let firstLine = item.content
@@ -67,13 +78,35 @@ struct ClipboardHistoryRowView: View {
         HStack(alignment: .top, spacing: rowSpacing) {
             leadingPreview
 
-            VStack(alignment: .leading, spacing: 0) {
-                Text(previewText)
-                    .font(previewFont)
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .textSelection(.disabled)
+            VStack(alignment: .leading, spacing: titleText == nil ? 0 : 3) {
+                if let titleText {
+                    HStack(spacing: 4) {
+                        Image(systemName: "tag.fill")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Theme.primary)
+
+                        Text(titleText)
+                            .font(Theme.textSmEmphasis)
+                            .foregroundStyle(Theme.text)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .textSelection(.disabled)
+                    }
+
+                    Text(previewText)
+                        .font(previewFont)
+                        .foregroundStyle(Theme.textMuted)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .textSelection(.disabled)
+                } else {
+                    Text(previewText)
+                        .font(previewFont)
+                        .foregroundStyle(Theme.text)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .textSelection(.disabled)
+                }
 
                 MetadataLine(chunks: metadataChunks, spacing: metadataSpacing)
                     .font(Theme.textXs)
@@ -98,6 +131,22 @@ struct ClipboardHistoryRowView: View {
         .contextMenu {
             Button("Copy") {
                 onCopy()
+            }
+
+            Divider()
+
+            Button {
+                isEditingTitle = true
+            } label: {
+                Label(titleText == nil ? "Add Title" : "Edit Title", systemImage: "pencil")
+            }
+
+            if titleText != nil {
+                Button {
+                    onUpdateTitle("")
+                } label: {
+                    Label("Clear Title", systemImage: "xmark.circle")
+                }
             }
 
             Divider()
@@ -132,6 +181,13 @@ struct ClipboardHistoryRowView: View {
         }
         .onHover { hovering in
             isHovered = hovering
+        }
+        .sheet(isPresented: $isEditingTitle) {
+            ClipboardItemTitleEditor(
+                title: titleText ?? "",
+                preview: previewText,
+                onSave: onUpdateTitle
+            )
         }
         .onDrag {
             NSItemProvider(object: item.id.uuidString as NSString)
@@ -234,6 +290,58 @@ struct ClipboardHistoryRowView: View {
             }
         }
         .help(membershipGroups.map(\.name).joined(separator: ", "))
+    }
+}
+
+private struct ClipboardItemTitleEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var draftTitle: String
+
+    let preview: String
+    let onSave: (String) -> Void
+
+    private let editorWidth: CGFloat = 340
+    private let editorSpacing: CGFloat = 12
+
+    init(title: String, preview: String, onSave: @escaping (String) -> Void) {
+        self._draftTitle = State(initialValue: title)
+        self.preview = preview
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: editorSpacing) {
+            Text("Item Title")
+                .font(Theme.textSmEmphasis)
+                .foregroundStyle(Theme.text)
+
+            Text(preview)
+                .font(Theme.textXs)
+                .foregroundStyle(Theme.textMuted)
+                .lineLimit(2)
+                .truncationMode(.tail)
+
+            TextField("Why did you copy this?", text: $draftTitle)
+                .textFieldStyle(.roundedBorder)
+
+            HStack {
+                Spacer()
+
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button("Save") {
+                    onSave(draftTitle)
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+        .frame(width: editorWidth)
+        .background(Theme.bg)
     }
 }
 

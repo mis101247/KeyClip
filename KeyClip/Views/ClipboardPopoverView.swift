@@ -42,6 +42,8 @@ struct ClipboardPopoverView: View {
         switch sidebarSelection {
         case .all:
             return store.items
+        case .tags:
+            return store.items.filter(\.hasTitle)
         case .contentType(let type):
             return store.items.filter { $0.type == type }
         case .group(let groupID):
@@ -60,7 +62,11 @@ struct ClipboardPopoverView: View {
         }
 
         return sidebarFilteredItems.filter { item in
-            item.content.range(
+            let searchableText = [item.title, item.content]
+                .compactMap { $0 }
+                .joined(separator: "\n")
+
+            return searchableText.range(
                 of: trimmedSearchQuery,
                 options: [.caseInsensitive, .diacriticInsensitive]
             ) != nil
@@ -68,7 +74,7 @@ struct ClipboardPopoverView: View {
     }
 
     private var protectedIDs: Set<UUID> {
-        Set(groupStore.groups.flatMap(\.itemIDs))
+        Set(groupStore.groups.flatMap(\.itemIDs)).union(store.titledItemIDs)
     }
 
     private var clearableItems: [ClipboardHistoryItem] {
@@ -79,6 +85,8 @@ struct ClipboardPopoverView: View {
         switch sidebarSelection {
         case .all:
             return "All"
+        case .tags:
+            return "Tags"
         case .contentType(let type):
             return type.displayName
         case .group(let groupID):
@@ -90,6 +98,8 @@ struct ClipboardPopoverView: View {
         switch sidebarSelection {
         case .all:
             return "Clear All"
+        case .tags:
+            return ""
         case .contentType(let type):
             return "Clear all in \(type.displayName) type"
         case .group:
@@ -101,6 +111,8 @@ struct ClipboardPopoverView: View {
         switch sidebarSelection {
         case .all:
             return "Clear all clipboard items?"
+        case .tags:
+            return ""
         case .contentType(let type):
             return "Clear all \(type.displayName) items?"
         case .group:
@@ -111,10 +123,14 @@ struct ClipboardPopoverView: View {
     private var clearConfirmationMessage: String {
         let count = clearableItems.count
         let noun = count == 1 ? "item" : "items"
-        return "\(count) \(noun) will be removed. Items in custom groups will be kept."
+        return "\(count) \(noun) will be removed. Items in Tags or custom groups will be kept."
     }
 
     private var shouldShowClearButton: Bool {
+        if case .tags = sidebarSelection {
+            return false
+        }
+
         if case .group = sidebarSelection {
             return false
         }
@@ -203,6 +219,12 @@ struct ClipboardPopoverView: View {
                     title: "No history yet",
                     hint: "Copy something to get started"
                 )
+            case .tags:
+                emptyState(
+                    systemImage: "tag",
+                    title: "No tags yet",
+                    hint: "Right-click an item to add a title"
+                )
             case .contentType(let type):
                 emptyState(
                     systemImage: type.systemImage,
@@ -232,6 +254,7 @@ struct ClipboardPopoverView: View {
                             groupStore: groupStore,
                             attachmentStore: attachmentStore,
                             onCopy: { onSelect(item) },
+                            onUpdateTitle: { title in store.updateTitle(id: item.id, title: title) },
                             onDelete: { store.remove(id: item.id) }
                         )
                         .contentShape(Rectangle())
@@ -298,7 +321,7 @@ struct ClipboardPopoverView: View {
                         }
                     }
                     Divider()
-                    Text("Items in custom groups never expire")
+                    Text("Items in Tags or custom groups never expire")
                         .font(retentionHintFont)
                 } label: {
                     Image(systemName: "gearshape")

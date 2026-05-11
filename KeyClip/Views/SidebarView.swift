@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 enum SidebarSelection: Hashable {
     case all
+    case tags
     case contentType(ContentType)
     case group(UUID)
 }
@@ -32,6 +33,10 @@ struct SidebarView: View {
     private let textFieldHorizontalPadding: CGFloat = 10
     private let textFieldHeight: CGFloat = 28
     private let textFieldOuterHorizontalPadding: CGFloat = 8
+
+    private var taggedItemsCount: Int {
+        historyStore.items.filter(\.hasTitle).count
+    }
 
     private let iconChoices = [
         "folder",
@@ -188,6 +193,8 @@ struct SidebarView: View {
                 )
             }
 
+            tagsRow
+
             ForEach(groupStore.groups) { group in
                 if renamingGroupID == group.id {
                     groupTextField(
@@ -200,6 +207,18 @@ struct SidebarView: View {
                     groupRow(group)
                 }
             }
+        }
+    }
+
+    private var tagsRow: some View {
+        SidebarRow(
+            systemImage: "tag.fill",
+            title: "Tags",
+            count: taggedItemsCount,
+            tintColor: Theme.primary,
+            isSelected: selection == .tags
+        ) {
+            selection = .tags
         }
     }
 

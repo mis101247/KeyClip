@@ -26,7 +26,8 @@ final class RetentionSweeper {
     }
 
     func runSweep() {
-        let protected = Set(groupStore.groups.flatMap(\.itemIDs))
+        let groupedIDs = Set(groupStore.groups.flatMap(\.itemIDs))
+        let protected = groupedIDs.union(historyStore.titledItemIDs)
         let oversizeCutoff = Date().addingTimeInterval(-24 * 60 * 60)
         historyStore.sweepOversizeExpired(olderThan: oversizeCutoff, protectedIDs: protected)
 
