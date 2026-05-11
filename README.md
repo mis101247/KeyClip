@@ -4,12 +4,15 @@ A calm, fast clipboard manager that lives in your macOS menu bar.
 
 <img src="https://github.com/user-attachments/assets/b3bd83c5-dde3-47b5-9214-d450418fb817" alt="KeyClip popover screenshot" width="620" />
 
-KeyClip remembers what you copy — text, rich text with formatting, images, links, code, and more — and brings it back with a keystroke. Items you care about can be filed into custom groups so they stick around; everything else cleans itself up on a schedule you choose.
+KeyClip remembers what you copy — text, rich text with formatting, images, links, code, and more — and brings it back with a keystroke. Everything stays on your Mac: KeyClip stores clipboard history locally and does not sync, upload, phone home, or make network requests.
+
+Items you care about can be filed into custom groups so they stick around; everything else cleans itself up on a schedule you choose.
 
 ## Highlights
 
 - **⇧⌘V from anywhere** to open the popover
 - **⌘1 – ⌘0** quick-paste the first ten visible clips
+- **Local-only by design** — no cloud sync, no analytics, no telemetry, and no network access from the app
 - **Auto-detected content types** (Text, Rich Text, Image, Link, Code, Email, Phone, Color, Emoji) shown with colored icons
 - **Custom groups** — drag any clip in, or right-click → *Add to Group*. Items in groups never expire and are skipped by Clear
 - **Source app** label on every clip so you remember where it came from
@@ -45,6 +48,8 @@ The first launch on a Gatekeeper-strict Mac may need a right-click → **Open** 
 - Custom groups have no size limit and never expire.
 
 ## Where data lives
+
+KeyClip only writes clipboard history, groups, and attachments under your local Application Support folder:
 
 ```
 ~/Library/Application Support/com.keyo.KeyClip/

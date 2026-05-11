@@ -5,6 +5,7 @@ final class ClipboardHistoryStore: ObservableObject {
     @Published private(set) var items: [ClipboardHistoryItem] = []
     var onItemsRemoved: (([UUID]) -> Void)?
     var onItemCaptured: (() -> Void)?
+    var protectedIDsProvider: () -> Set<UUID> = { [] }
 
     private let maxItems = 100
     private let fileURL: URL
@@ -159,19 +160,40 @@ final class ClipboardHistoryStore: ObservableObject {
     }
 
     private func enforceMaxItems() {
-        if items.count > maxItems {
-            let droppedItems = Array(items.suffix(items.count - maxItems))
-            let dropped = droppedItems.map(\.id)
-            cleanupAttachments(for: droppedItems)
-            items = Array(items.prefix(maxItems))
-            onItemsRemoved?(dropped)
+        let protectedIDs = protectedIDsProvider()
+        var unprotectedSeen = 0
+        var droppedItems: [ClipboardHistoryItem] = []
+        var keptItems: [ClipboardHistoryItem] = []
+
+        for item in items {
+            if protectedIDs.contains(item.id) {
+                keptItems.append(item)
+                continue
+            }
+
+            unprotectedSeen += 1
+            if unprotectedSeen <= maxItems {
+                keptItems.append(item)
+            } else {
+                droppedItems.append(item)
+            }
         }
+
+        guard !droppedItems.isEmpty else { return }
+
+        cleanupAttachments(for: droppedItems)
+        items = keptItems
+        onItemsRemoved?(droppedItems.map(\.id))
     }
 
     func clear() {
-        let removed = items.map(\.id)
-        cleanupAttachments(for: items)
-        items.removeAll()
+        let protectedIDs = protectedIDsProvider()
+        let removedItems = items.filter { !protectedIDs.contains($0.id) }
+        guard !removedItems.isEmpty else { return }
+
+        let removed = removedItems.map(\.id)
+        cleanupAttachments(for: removedItems)
+        items.removeAll { !protectedIDs.contains($0.id) }
         onItemsRemoved?(removed)
         save()
     }

@@ -94,7 +94,7 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
 - `ClipboardMonitor` polls `NSPasteboard.general.changeCount` every 0.5 seconds and captures the frontmost app at the moment of capture for source attribution.
 - `GlobalHotkey` registers ⇧⌘V via Carbon's `RegisterEventHotKey` so the popover can be summoned from anywhere.
 - `ContentTypeDetector` inspects each clip and the pasteboard to assign one of: Text, Rich Text, Link, Email, Phone, Color, Emoji, or Code. Image is produced when PNG / TIFF is on the pasteboard. File / Files cases exist in the model but are not produced by the current monitor.
-- `ClipboardHistoryStore` persists up to 100 clips at `~/Library/Application Support/com.keyo.KeyClip/clipboard-history.json`.
+- `ClipboardHistoryStore` persists up to 100 ungrouped clips at `~/Library/Application Support/com.keyo.KeyClip/clipboard-history.json`; items in custom groups are protected from the history cap.
 - `ClipboardGroupStore` persists user-defined groups at `~/Library/Application Support/com.keyo.KeyClip/clipboard-groups.json` and prunes orphaned item IDs whenever a clip is dropped from history.
 - `AttachmentStore` writes images and RTF payloads to `~/Library/Application Support/com.keyo.KeyClip/attachments/` for thumbnails and pasteboard restoration. Attachments are deleted alongside their owning history item.
 - `RetentionSweeper` runs at launch, every 30 minutes thereafter, and immediately when the retention policy changes. It first removes any item flagged `isOversize` after 24 hours, then enforces the user-selected policy. Items in any custom group are always exempt.
@@ -103,7 +103,7 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
 
 - Empty and whitespace-only clips are ignored.
 - Hard cap is 100 MB per clip across text, RTF, and image.
-- Anything larger than 10 MB is accepted but flagged `isOversize`, marked with a "24h" badge in the UI, and force-expired after 24 hours regardless of the configured retention policy.
+- Anything larger than 10 MB is accepted but flagged `isOversize`, marked with a "24h" badge in the UI, and force-expired after 24 hours unless it belongs to a custom group.
 - Duplicate clips are detected by SHA-256 hash after normalizing line endings for hashing only, while preserving the original clipboard content.
 
 ## Persistence Compatibility
