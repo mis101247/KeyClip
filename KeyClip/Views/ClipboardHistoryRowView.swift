@@ -3,6 +3,7 @@ import SwiftUI
 struct ClipboardHistoryRowView: View {
     let item: ClipboardHistoryItem
     let shortcutLabel: String?
+    let isSelected: Bool
     @ObservedObject var groupStore: ClipboardGroupStore
     let attachmentStore: AttachmentStore
     let onCopy: () -> Void
@@ -126,7 +127,7 @@ struct ClipboardHistoryRowView: View {
         .padding(.horizontal, rowHorizontalPadding)
         .padding(.vertical, rowVerticalPadding)
         .frame(maxWidth: .infinity, minHeight: rowMinHeight, alignment: .leading)
-        .background(isHovered ? Theme.surface : Color.clear)
+        .background(rowBackground)
         .contentShape(Rectangle())
         .contextMenu {
             Button("Copy") {
@@ -192,6 +193,18 @@ struct ClipboardHistoryRowView: View {
         .onDrag {
             NSItemProvider(object: item.id.uuidString as NSString)
         }
+    }
+
+    private var rowBackground: Color {
+        if isSelected {
+            return Theme.primary.opacity(0.12)
+        }
+
+        if isHovered {
+            return Theme.surface
+        }
+
+        return Color.clear
     }
 
     @ViewBuilder

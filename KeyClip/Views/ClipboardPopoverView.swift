@@ -7,6 +7,7 @@ struct ClipboardPopoverView: View {
     @State private var searchQuery: String = ""
     @State private var sidebarSelection: SidebarSelection = .all
     @State private var showClearConfirmation = false
+    @State private var selectedItemID: UUID?
 
     let attachmentStore: AttachmentStore
     let onSelect: (ClipboardHistoryItem) -> Void
@@ -29,6 +30,7 @@ struct ClipboardPopoverView: View {
     private let emptyStatePadding: CGFloat = 24
     private let hiddenHotkeySize: CGFloat = 0
     private let hiddenHotkeyOpacity: Double = 0
+    private let selectionScrollAnchor: UnitPoint = .center
 
     private var retentionHintFont: Font {
         .system(.caption2)
@@ -178,6 +180,12 @@ struct ClipboardPopoverView: View {
         .onExitCommand {
             onClose()
         }
+        .onAppear {
+            reconcileSelection()
+        }
+        .onChange(of: filteredItems) { _ in
+            reconcileSelection()
+        }
         .alert(
             clearConfirmationTitle,
             isPresented: $showClearConfirmation
@@ -245,32 +253,43 @@ struct ClipboardPopoverView: View {
                 hint: "No results for '\(trimmedSearchQuery)'"
             )
         } else {
-            ScrollView {
-                LazyVStack(spacing: listSpacing) {
-                    ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
-                        ClipboardHistoryRowView(
-                            item: item,
-                            shortcutLabel: shortcutLabel(for: index),
-                            groupStore: groupStore,
-                            attachmentStore: attachmentStore,
-                            onCopy: { onSelect(item) },
-                            onUpdateTitle: { title in store.updateTitle(id: item.id, title: title) },
-                            onDelete: { store.remove(id: item.id) }
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            onSelect(item)
-                        }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: listSpacing) {
+                        ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
+                            ClipboardHistoryRowView(
+                                item: item,
+                                shortcutLabel: shortcutLabel(for: index),
+                                isSelected: item.id == selectedItemID,
+                                groupStore: groupStore,
+                                attachmentStore: attachmentStore,
+                                onCopy: { onSelect(item) },
+                                onUpdateTitle: { title in store.updateTitle(id: item.id, title: title) },
+                                onDelete: { store.remove(id: item.id) }
+                            )
+                            .id(item.id)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedItemID = item.id
+                                onSelect(item)
+                            }
 
-                        if index < filteredItems.count - 1 {
-                            Divider()
-                                .background(Theme.divider)
+                            if index < filteredItems.count - 1 {
+                                Divider()
+                                    .background(Theme.divider)
+                            }
                         }
                     }
+                    .padding(.vertical, listVerticalPadding)
                 }
-                .padding(.vertical, listVerticalPadding)
+                .background(Theme.bg)
+                .onChange(of: selectedItemID) { id in
+                    guard let id else { return }
+                    withAnimation(.easeInOut(duration: 0.12)) {
+                        proxy.scrollTo(id, anchor: selectionScrollAnchor)
+                    }
+                }
             }
-            .background(Theme.bg)
         }
     }
 
@@ -357,6 +376,21 @@ struct ClipboardPopoverView: View {
                 }
                 .keyboardShortcut(KeyEquivalent(Character(index == 9 ? "0" : "\(index + 1)")), modifiers: .command)
             }
+
+            Button("") {
+                moveSelection(delta: -1)
+            }
+            .keyboardShortcut(.upArrow, modifiers: [])
+
+            Button("") {
+                moveSelection(delta: 1)
+            }
+            .keyboardShortcut(.downArrow, modifiers: [])
+
+            Button("") {
+                selectHighlightedItem()
+            }
+            .keyboardShortcut(.return, modifiers: [])
         }
         .frame(width: hiddenHotkeySize, height: hiddenHotkeySize)
         .opacity(hiddenHotkeyOpacity)
@@ -367,6 +401,45 @@ struct ClipboardPopoverView: View {
         guard filteredItems.indices.contains(index) else { return }
 
         onSelect(filteredItems[index])
+    }
+
+    private func reconcileSelection() {
+        guard !filteredItems.isEmpty else {
+            selectedItemID = nil
+            return
+        }
+
+        if let selectedItemID,
+           filteredItems.contains(where: { $0.id == selectedItemID }) {
+            return
+        }
+
+        selectedItemID = filteredItems[0].id
+    }
+
+    private func moveSelection(delta: Int) {
+        guard !filteredItems.isEmpty else { return }
+
+        guard let selectedItemID,
+              let currentIndex = filteredItems.firstIndex(where: { $0.id == selectedItemID }) else {
+            self.selectedItemID = filteredItems[0].id
+            return
+        }
+
+        let nextIndex = min(max(currentIndex + delta, 0), filteredItems.count - 1)
+        self.selectedItemID = filteredItems[nextIndex].id
+    }
+
+    private func selectHighlightedItem() {
+        guard !filteredItems.isEmpty else { return }
+
+        if let selectedItemID,
+           let item = filteredItems.first(where: { $0.id == selectedItemID }) {
+            onSelect(item)
+            return
+        }
+
+        onSelect(filteredItems[0])
     }
 
     private func shortcutLabel(for index: Int) -> String? {
