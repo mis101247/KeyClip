@@ -7,23 +7,30 @@ final class MenuBarController: NSObject {
     private let groupStore: ClipboardGroupStore
     private let attachmentStore: AttachmentStore
     private let settings: UserSettings
+    private let onCheckForUpdates: () -> Void
+    private let canCheckForUpdates: () -> Bool
     private let statusItem: NSStatusItem
     private let popover: NSPopover
     private var globalClickMonitor: Any?
     private var flashTimer: Timer?
+    private var settingsWindowController: NSWindowController?
 
     init(
         store: ClipboardHistoryStore,
         monitor: ClipboardMonitor,
         groupStore: ClipboardGroupStore,
         attachmentStore: AttachmentStore,
-        settings: UserSettings
+        settings: UserSettings,
+        onCheckForUpdates: @escaping () -> Void,
+        canCheckForUpdates: @escaping () -> Bool
     ) {
         self.store = store
         self.monitor = monitor
         self.groupStore = groupStore
         self.attachmentStore = attachmentStore
         self.settings = settings
+        self.onCheckForUpdates = onCheckForUpdates
+        self.canCheckForUpdates = canCheckForUpdates
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         self.popover = NSPopover()
 
@@ -50,6 +57,7 @@ final class MenuBarController: NSObject {
     private func configurePopover() {
         popover.contentSize = NSSize(width: 600, height: 520)
         popover.behavior = .transient
+        popover.animates = false
         resetPopoverContent()
     }
 
@@ -80,6 +88,9 @@ final class MenuBarController: NSObject {
                 },
                 onClose: { [weak self] in
                     self?.closePopover()
+                },
+                onOpenSettings: { [weak self] in
+                    self?.showSettingsWindow()
                 }
             )
         )
@@ -108,6 +119,15 @@ final class MenuBarController: NSObject {
         pauseItem.target = self
         menu.addItem(pauseItem)
         menu.addItem(NSMenuItem.separator())
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+        menu.addItem(NSMenuItem.separator())
+        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
+        updateItem.target = self
+        updateItem.isEnabled = canCheckForUpdates()
+        menu.addItem(updateItem)
+        menu.addItem(NSMenuItem.separator())
         let quit = NSMenuItem(title: "Quit KeyClip", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -119,6 +139,14 @@ final class MenuBarController: NSObject {
     @objc private func togglePaused() {
         monitor.togglePaused()
         updateStatusItemAppearance()
+    }
+
+    @objc private func openSettings() {
+        showSettingsWindow()
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates()
     }
 
     @objc private func quit() {
@@ -148,10 +176,33 @@ final class MenuBarController: NSObject {
     private func showPopover() {
         guard let button = statusItem.button else { return }
 
-        resetPopoverContent()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
         installGlobalClickMonitor()
+    }
+
+    private func showSettingsWindow() {
+        closePopover()
+
+        if settingsWindowController == nil {
+            let hostingController = NSHostingController(
+                rootView: SettingsPanelView(settings: settings, historyStore: store)
+            )
+            let window = NSWindow(contentViewController: hostingController)
+            window.title = "KeyClip Settings"
+            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+            window.minSize = NSSize(width: 720, height: 500)
+            window.setContentSize(NSSize(width: 760, height: 540))
+            window.center()
+            window.isReleasedWhenClosed = false
+            window.collectionBehavior = [.moveToActiveSpace]
+
+            settingsWindowController = NSWindowController(window: window)
+        }
+
+        settingsWindowController?.showWindow(nil)
+        settingsWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     private func closePopover() {

@@ -6,6 +6,8 @@ final class ClipboardMonitor {
     private static let oversizeThresholdBytes = 10 * 1024 * 1024
 
     private let pasteboard: NSPasteboard
+    private let isSourceAppExcluded: (String?) -> Bool
+    private let shouldCapture: (ContentType, Int, String?) -> Bool
     private let onNewText: (String, ContentType, Data?, Bool, String?, String?) -> Void
     private let onNewImage: (Data, String, CGSize, Bool, String?, String?) -> Void
     private var timer: Timer?
@@ -15,10 +17,14 @@ final class ClipboardMonitor {
 
     init(
         pasteboard: NSPasteboard = .general,
+        isSourceAppExcluded: @escaping (String?) -> Bool = { _ in false },
+        shouldCapture: @escaping (ContentType, Int, String?) -> Bool = { _, _, _ in true },
         onNewText: @escaping (String, ContentType, Data?, Bool, String?, String?) -> Void,
         onNewImage: @escaping (Data, String, CGSize, Bool, String?, String?) -> Void
     ) {
         self.pasteboard = pasteboard
+        self.isSourceAppExcluded = isSourceAppExcluded
+        self.shouldCapture = shouldCapture
         self.onNewText = onNewText
         self.onNewImage = onNewImage
         self.lastChangeCount = pasteboard.changeCount
@@ -94,9 +100,17 @@ final class ClipboardMonitor {
         let resolvedBundleID = (frontApp?.bundleIdentifier == myBundleID) ? nil : frontApp?.bundleIdentifier
         let resolvedName = (frontApp?.bundleIdentifier == myBundleID) ? nil : frontApp?.localizedName
 
+        guard !isSourceAppExcluded(resolvedBundleID) else {
+            return
+        }
+
         if let image = readImageFromPasteboard() {
             guard image.data.count <= Self.maxBytes else {
                 NSLog("Skipping oversize image clip: \(image.data.count) bytes")
+                return
+            }
+
+            guard shouldCapture(.image, image.data.count, resolvedBundleID) else {
                 return
             }
 
@@ -114,7 +128,12 @@ final class ClipboardMonitor {
         let rtfData = sanitizedRtfData(pasteboard.data(forType: .rtf))
         let type = ContentTypeDetector.detect(content: content, pasteboard: pasteboard)
         let textBytes = content.utf8.count
-        let isOversize = textBytes + (rtfData?.count ?? 0) > Self.oversizeThresholdBytes
+        let totalBytes = textBytes + (rtfData?.count ?? 0)
+        guard shouldCapture(type, totalBytes, resolvedBundleID) else {
+            return
+        }
+
+        let isOversize = totalBytes > Self.oversizeThresholdBytes
         onNewText(content, type, rtfData, isOversize, resolvedBundleID, resolvedName)
     }
 

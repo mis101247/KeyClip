@@ -45,7 +45,11 @@ final class GlobalHotkey {
                     &hotKeyID
                 )
                 guard status == noErr else { return status }
-                DispatchQueue.main.async { hotkey.onTrigger() }
+                if Thread.isMainThread {
+                    hotkey.onTrigger()
+                } else {
+                    DispatchQueue.main.async { hotkey.onTrigger() }
+                }
                 return noErr
             },
             1,

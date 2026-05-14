@@ -3,32 +3,90 @@ import SwiftUI
 
 enum Theme {
 
-    // MARK: - Colors (light / dark dynamic)
+    // MARK: - Keyo Brand Colors
 
-    static let bg              = dynamic(light: hex(0xf7f6f2), dark: hex(0x171614))
-    static let surface         = dynamic(light: hex(0xf9f8f5), dark: hex(0x1c1b19))
-    static let surface2        = dynamic(light: hex(0xfbfbf9), dark: hex(0x201f1d))
-    static let surfaceOffset   = dynamic(light: hex(0xf3f0ec), dark: hex(0x22211f))
-    static let divider         = dynamic(light: hex(0xdcd9d5), dark: hex(0x262523))
-    static let border          = dynamic(light: hex(0xd4d1ca), dark: hex(0x393836))
+    static let sky             = color(0xb8d8f0)
+    static let mist            = color(0xd6ecf8)
+    static let sun             = color(0xfff3c0)
+    static let honey           = color(0xffdf90)
+    static let lotus           = color(0xffd6dc)
+    static let leaf            = color(0xd8edd8)
+    static let canvas          = color(0xfafbfc)
+    static let quartz          = color(0xe2eaf0)
+    static let ink             = color(0x3a6080)
 
-    static let text            = dynamic(light: hex(0x28251d), dark: hex(0xcdccca))
-    static let textMuted       = dynamic(light: hex(0x7a7974), dark: hex(0x797876))
-    static let textFaint       = dynamic(light: hex(0xbab9b4), dark: hex(0x5a5957))
+    static let cream           = color(0xf7f1e6)
+    static let meadow          = color(0x7fb65a)
+    static let grove           = color(0x3f6b3a)
+    static let butter          = color(0xf6c94c)
+    static let sunset          = color(0xf79a2e)
+    static let tomato          = color(0xe94832)
+    static let coral           = color(0xf47c6b)
+    static let blush           = color(0xf3b8c8)
+    static let daySky          = color(0x77b8e8)
+    static let fjord           = color(0x9ed6d2)
+    static let snowLilac       = color(0xd8c8f4)
+    static let wood            = color(0xb98e63)
 
-    static let primary         = dynamic(light: hex(0x01696f), dark: hex(0x4f98a3))
+    // MARK: - Semantic Colors
+
+    static let bg              = canvas
+    static let surface         = mist.opacity(0.82)
+    static let surface2        = cream.opacity(0.78)
+    static let surfaceOffset   = leaf.opacity(0.62)
+    static let divider         = quartz.opacity(0.72)
+    static let border          = quartz
+
+    static let text            = ink
+    static let textMuted       = ink.opacity(0.72)
+    static let textFaint       = ink.opacity(0.46)
+
+    static let primary         = daySky
+    static let primarySoft     = sky.opacity(0.34)
+    static let accent          = honey
+    static let memoryPoint     = tomato
+
+    static let contentBackground = LinearGradient(
+        colors: [
+            canvas,
+            mist.opacity(0.34),
+            cream.opacity(0.62)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let sidebarBackground = LinearGradient(
+        colors: [
+            mist.opacity(0.88),
+            leaf.opacity(0.42),
+            canvas
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let selectedBackground = LinearGradient(
+        colors: [
+            honey.opacity(0.42),
+            sky.opacity(0.34),
+            lotus.opacity(0.24)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 
     // Type icon tints
-    static let iconCode        = dynamic(light: hex(0x7c5cff), dark: hex(0xa78bff))
-    static let iconText        = dynamic(light: hex(0x8e8c87), dark: hex(0x8a8884))
-    static let iconRichText    = dynamic(light: hex(0xd97447), dark: hex(0xe08a5e))
-    static let iconImage       = dynamic(light: hex(0x4789d9), dark: hex(0x6aa3e8))
-    static let iconLink        = dynamic(light: hex(0x1ea49b), dark: hex(0x3ab8ad))
-    static let iconEmail       = dynamic(light: hex(0xc5524a), dark: hex(0xd56b62))
-    static let iconPhone       = dynamic(light: hex(0x4ea05c), dark: hex(0x6cba79))
-    static let iconColor       = dynamic(light: hex(0xc36ba6), dark: hex(0xd687bd))
-    static let iconEmoji       = dynamic(light: hex(0xc99a3a), dark: hex(0xddb050))
-    static let iconFile        = dynamic(light: hex(0x7d7c77), dark: hex(0x9b9994))
+    static let iconCode        = snowLilac
+    static let iconText        = textMuted
+    static let iconRichText    = coral
+    static let iconImage       = daySky
+    static let iconLink        = fjord
+    static let iconEmail       = sunset
+    static let iconPhone       = meadow
+    static let iconColor       = blush
+    static let iconEmoji       = butter
+    static let iconFile        = wood
 
     // MARK: - Spacing
     static let space1: CGFloat = 4
@@ -37,31 +95,55 @@ enum Theme {
     static let space4: CGFloat = 16
 
     // MARK: - Radius
-    static let radiusSm: CGFloat = 6
+    static let radiusSm: CGFloat = 8
+    static let radiusMd: CGFloat = 12
     static let radiusFull: CGFloat = 9999
 
     // MARK: - Type scale
-    static let textXs: Font  = .system(size: 12, weight: .regular, design: .default)
-    static let textXsMedium: Font = .system(size: 12, weight: .medium, design: .default)
-    static let textSm: Font  = .system(size: 13, weight: .regular, design: .default)
-    static let textSmEmphasis: Font = .system(size: 13, weight: .semibold, design: .default)
+    static let headingSm: Font = serifFont(size: 14, weight: .bold)
+    static let headingTracking: CGFloat = 0.7
+    static let textXs: Font  = sansFont(size: 12, weight: .regular)
+    static let textXsMedium: Font = sansFont(size: 12, weight: .medium)
+    static let textSm: Font  = sansFont(size: 13, weight: .regular)
+    static let textSmEmphasis: Font = sansFont(size: 13, weight: .semibold)
     static let textMono: Font = .system(size: 12, weight: .regular, design: .monospaced)
     static let textCodePreview: Font = .system(size: 13, weight: .regular, design: .monospaced)
 
+    // MARK: - Shadows
+    static let softShadow = ink.opacity(0.10)
+    static let softShadowLight = ink.opacity(0.08)
+
     // MARK: - Helpers
+
+    private static func color(_ value: UInt32) -> Color {
+        Color(nsColor: hex(value))
+    }
+
+    private static func serifFont(size: CGFloat, weight: Font.Weight) -> Font {
+        if hasFontFamily("Noto Serif TC") {
+            return .custom("Noto Serif TC", size: size).weight(weight)
+        }
+
+        return .custom("Georgia", size: size).weight(weight)
+    }
+
+    private static func sansFont(size: CGFloat, weight: Font.Weight) -> Font {
+        if hasFontFamily("Noto Sans TC") {
+            return .custom("Noto Sans TC", size: size).weight(weight)
+        }
+
+        return .system(size: size, weight: weight, design: .default)
+    }
+
+    private static func hasFontFamily(_ familyName: String) -> Bool {
+        NSFontManager.shared.availableFontFamilies.contains(familyName)
+    }
 
     private static func hex(_ value: UInt32) -> NSColor {
         let r = CGFloat((value >> 16) & 0xff) / 255
         let g = CGFloat((value >> 8) & 0xff) / 255
         let b = CGFloat(value & 0xff) / 255
         return NSColor(red: r, green: g, blue: b, alpha: 1)
-    }
-
-    private static func dynamic(light: NSColor, dark: NSColor) -> Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
-            let isDark = appearance.bestMatch(from: [.darkAqua, .vibrantDark]) != nil
-            return isDark ? dark : light
-        })
     }
 }
 

@@ -19,6 +19,91 @@ Build and assemble the `.app` bundle:
 open KeyClip.app
 ```
 
+Build a drag-to-Applications DMG:
+
+```sh
+./release_dmg.sh
+open dist/KeyClip-1.0.dmg
+```
+
+The DMG contains `KeyClip.app` and an `Applications` shortcut, so users can drag the app into Applications. `build.sh` generates a placeholder `AppIcon.icns` during bundling; replace `scripts/generate_icon.swift` or copy in a final `AppIcon.icns` when you have a production icon.
+
+## Sparkle Updates
+
+KeyClip uses Sparkle for update checks. Local development builds can omit the update feed and key; release builds should provide them:
+
+```sh
+VERSION=1.1 \
+BUILD_NUMBER=2 \
+UPDATE_FEED_URL=https://example.com/keyclip/appcast.xml \
+SPARKLE_PUBLIC_ED_KEY="public-key-from-generate-keys" \
+APPCAST_DOWNLOAD_URL_PREFIX=https://example.com/keyclip/ \
+./release_dmg.sh
+```
+
+Run this once on your release machine to create Sparkle's EdDSA key pair and print the public key:
+
+```sh
+./scripts/generate_sparkle_keys.sh
+```
+
+Sparkle stores the private key in your login Keychain by default. Keep it safe. If you prefer CI secrets, pass the private key to the release script with either `SPARKLE_PRIVATE_ED_KEY_FILE=/path/to/key` or `SPARKLE_PRIVATE_ED_KEY="..."`.
+
+The release script writes the DMG to `dist/KeyClip-$VERSION.dmg`, copies it into `dist/appcast/`, and runs Sparkle's `generate_appcast` tool to create or update `dist/appcast/appcast.xml`. Upload the contents of `dist/appcast/` to the same location used by `UPDATE_FEED_URL` and `APPCAST_DOWNLOAD_URL_PREFIX`.
+
+For the `keyclip.keyo.tw` website, run:
+
+```sh
+VERSION=1.1 BUILD_NUMBER=2 ./scripts/release_keyclip_tw.sh
+```
+
+This stages a deployable static site in `dist/site/`:
+
+```text
+dist/site/
+├── appcast.xml
+├── download/
+│   └── KeyClip-1.1.dmg
+└── index.html
+```
+
+Deploy the contents of `dist/site/` to `https://keyclip.keyo.tw/`.
+
+To deploy that site to Vercel:
+
+```sh
+./scripts/deploy_keyclip_vercel.sh
+```
+
+## Developer ID Notarization
+
+Local builds use ad-hoc signing, so macOS may show an unidentified or unverified developer warning. Public downloads should be signed with a Developer ID Application certificate and notarized by Apple.
+
+Create a reusable notary profile once:
+
+```sh
+xcrun notarytool store-credentials keyclip \
+  --apple-id you@example.com \
+  --team-id TEAMID \
+  --password app-specific-password
+```
+
+Build, notarize, generate appcast, and stage the website with your Developer ID identity:
+
+```sh
+CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+VERSION=1.1 BUILD_NUMBER=2 \
+NOTARY_PROFILE=keyclip \
+NOTARIZE=1 \
+./scripts/release_keyclip_tw.sh
+```
+
+The release script notarizes before generating `appcast.xml`, so Sparkle signs the final stapled DMG bytes. You can also notarize one DMG manually for diagnosis:
+
+```sh
+NOTARY_PROFILE=keyclip VERSION=1.1 ./scripts/notarize_dmg.sh
+```
+
 On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require right-clicking `KeyClip.app` and choosing **Open** the first time.
 
 ## Building with Xcode

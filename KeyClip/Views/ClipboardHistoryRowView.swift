@@ -22,7 +22,7 @@ struct ClipboardHistoryRowView: View {
     private let typeIconSize: CGFloat = 16
     private let typeIconContainerSize: CGFloat = 20
     private let imagePreviewSize: CGFloat = 36
-    private let imagePreviewCornerRadius: CGFloat = 6
+    private let imagePreviewCornerRadius: CGFloat = Theme.radiusSm
     private let shortcutMinWidth: CGFloat = 24
 
     private var titleText: String? {
@@ -128,6 +128,7 @@ struct ClipboardHistoryRowView: View {
         .padding(.vertical, rowVerticalPadding)
         .frame(maxWidth: .infinity, minHeight: rowMinHeight, alignment: .leading)
         .background(rowBackground)
+        .shadow(color: (isSelected || isHovered) ? Theme.softShadowLight : Color.clear, radius: 12, x: 0, y: 4)
         .contentShape(Rectangle())
         .contextMenu {
             Button("Copy") {
@@ -195,24 +196,24 @@ struct ClipboardHistoryRowView: View {
         }
     }
 
-    private var rowBackground: Color {
+    @ViewBuilder
+    private var rowBackground: some View {
         if isSelected {
-            return Theme.primary.opacity(0.12)
+            RoundedRectangle(cornerRadius: Theme.radiusMd)
+                .fill(Theme.selectedBackground)
+        } else if isHovered {
+            RoundedRectangle(cornerRadius: Theme.radiusMd)
+                .fill(Theme.canvas.opacity(0.82))
+        } else {
+            Color.clear
         }
-
-        if isHovered {
-            return Theme.surface
-        }
-
-        return Color.clear
     }
 
     @ViewBuilder
     private var leadingPreview: some View {
         if item.type == .image,
            let filename = item.attachmentFilename,
-           let data = attachmentStore.read(filename: filename),
-           let nsImage = NSImage(data: data) {
+           let nsImage = ClipboardPreviewImageCache.image(filename: filename, attachmentStore: attachmentStore) {
             Image(nsImage: nsImage)
                 .resizable()
                 .scaledToFill()
@@ -256,7 +257,7 @@ struct ClipboardHistoryRowView: View {
             Text("24h")
         }
         .font(Theme.textXs)
-        .foregroundStyle(.orange)
+        .foregroundStyle(Theme.sunset)
         .help("Auto-deletes after 24 hours")
     }
 
@@ -306,6 +307,24 @@ struct ClipboardHistoryRowView: View {
     }
 }
 
+private enum ClipboardPreviewImageCache {
+    private static let cache = NSCache<NSString, NSImage>()
+
+    static func image(filename: String, attachmentStore: AttachmentStore) -> NSImage? {
+        if let cached = cache.object(forKey: filename as NSString) {
+            return cached
+        }
+
+        guard let data = attachmentStore.read(filename: filename),
+              let image = NSImage(data: data) else {
+            return nil
+        }
+
+        cache.setObject(image, forKey: filename as NSString)
+        return image
+    }
+}
+
 private struct ClipboardItemTitleEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draftTitle: String
@@ -325,7 +344,8 @@ private struct ClipboardItemTitleEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: editorSpacing) {
             Text("Item Title")
-                .font(Theme.textSmEmphasis)
+                .font(Theme.headingSm)
+                .tracking(Theme.headingTracking)
                 .foregroundStyle(Theme.text)
 
             Text(preview)
@@ -354,7 +374,7 @@ private struct ClipboardItemTitleEditor: View {
         }
         .padding()
         .frame(width: editorWidth)
-        .background(Theme.bg)
+        .background(Theme.contentBackground)
     }
 }
 

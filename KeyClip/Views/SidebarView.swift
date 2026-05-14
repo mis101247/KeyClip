@@ -52,7 +52,7 @@ struct SidebarView: View {
     var body: some View {
         ZStack(alignment: .trailing) {
             Rectangle()
-                .fill(Theme.surface)
+                .fill(Theme.sidebarBackground)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -93,7 +93,8 @@ struct SidebarView: View {
     private var sidebarHeader: some View {
         HStack(spacing: 8) {
             Text("Clipboard")
-                .font(Theme.textSmEmphasis)
+                .font(Theme.headingSm)
+                .tracking(Theme.headingTracking)
                 .foregroundStyle(Theme.text)
 
             Spacer(minLength: 4)
@@ -116,12 +117,13 @@ struct SidebarView: View {
             .frame(height: 28)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSm)
-                    .fill(Theme.surface2)
+                    .fill(Theme.canvas.opacity(0.72))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.radiusSm)
-                            .stroke(isSearchFocused ? Theme.primary : Theme.border, lineWidth: 1)
+                            .stroke(isSearchFocused ? Theme.honey : Theme.quartz.opacity(0.82), lineWidth: 1)
                     )
             )
+            .shadow(color: isSearchFocused ? Theme.softShadowLight : Color.clear, radius: 12, x: 0, y: 4)
             .overlay(alignment: .leading) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 11))
@@ -230,7 +232,7 @@ struct SidebarView: View {
             tintColor: Theme.textMuted,
             isSelected: selection == .group(group.id),
             backgroundFill: dropTargetGroupID == group.id
-                ? Theme.primary.opacity(0.18)
+                ? Theme.honey.opacity(0.32)
                 : nil,
             trailingMenu: {
                 groupActionsMenu(for: group, labelStyle: .ellipsis)
@@ -312,7 +314,7 @@ struct SidebarView: View {
             .frame(height: textFieldHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSm)
-                    .fill(Theme.surface2)
+                    .fill(Theme.canvas.opacity(0.74))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.radiusSm)
                             .stroke(Theme.border, lineWidth: 1)
@@ -439,18 +441,34 @@ private struct SidebarRow<TrailingMenu: View>: View {
     private let rowIconWidth: CGFloat = 16
     private let spacerMinLength: CGFloat = 4
 
+    private var rowBackground: Color {
+        if let backgroundFill {
+            return backgroundFill
+        }
+
+        if isSelected {
+            return Theme.honey.opacity(0.38)
+        }
+
+        if isHovered {
+            return Theme.canvas.opacity(0.72)
+        }
+
+        return Color.clear
+    }
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: rowSpacing) {
                 Image(systemName: systemImage)
                     .font(.system(size: rowIconSize, weight: .medium))
-                    .foregroundStyle(isSelected ? Theme.primary : tintColor)
+                    .foregroundStyle(isSelected ? Theme.ink : tintColor)
                     .frame(width: rowIconWidth)
 
                 Text(title)
                     .font(Theme.textSm)
                     .fontWeight(isSelected ? .medium : .regular)
-                    .foregroundStyle(isSelected ? Theme.primary : Theme.textMuted)
+                    .foregroundStyle(isSelected ? Theme.ink : Theme.textMuted)
                     .lineLimit(1)
 
                 Spacer(minLength: spacerMinLength)
@@ -466,11 +484,9 @@ private struct SidebarRow<TrailingMenu: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSm)
-                    .fill(
-                        backgroundFill
-                            ?? (isHovered ? Theme.surfaceOffset : Color.clear)
-                    )
+                    .fill(rowBackground)
             )
+            .shadow(color: (isSelected || isHovered) ? Theme.softShadowLight : Color.clear, radius: 10, x: 0, y: 4)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -524,7 +540,7 @@ private struct CountBadge: View {
             .padding(.vertical, 1)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusFull)
-                    .fill(Theme.surfaceOffset)
+                    .fill(Theme.sun.opacity(0.54))
             )
     }
 }
@@ -536,8 +552,9 @@ private struct SidebarHoverBackground: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSm)
-                    .fill(isHovered ? Theme.surfaceOffset : Color.clear)
+                    .fill(isHovered ? Theme.honey.opacity(0.34) : Color.clear)
             )
+            .shadow(color: isHovered ? Theme.softShadowLight : Color.clear, radius: 10, x: 0, y: 4)
             .onHover { hovering in
                 isHovered = hovering
             }

@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var retentionSweeper: RetentionSweeper?
     private var cancellable: AnyCancellable?
     private var globalHotkey: GlobalHotkey?
+    private var appUpdater: AppUpdater?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -28,7 +29,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let monitor = ClipboardMonitor(
-            onNewText: { content, type, rtfData, isOversize, bundleID, appName in
+            isSourceAppExcluded: { [weak self] bundleID in
+                self?.settings.isAppExcluded(bundleID: bundleID) ?? false
+            },
+            shouldCapture: { [weak self] type, byteCount, bundleID in
+                self?.settings.shouldCapture(type: type, byteCount: byteCount, bundleID: bundleID) ?? true
+            },
+            onNewText: { [weak self] content, type, rtfData, isOversize, bundleID, appName in
                 store.add(
                     content: content,
                     type: type,
@@ -37,13 +44,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     sourceAppBundleID: bundleID,
                     sourceAppName: appName
                 )
+                self?.settings.recordCapture(
+                    type: type,
+                    byteCount: content.utf8.count + (rtfData?.count ?? 0),
+                    sourceAppBundleID: bundleID,
+                    sourceAppName: appName
+                )
             },
-            onNewImage: { data, hash, dimensions, isOversize, bundleID, appName in
+            onNewImage: { [weak self] data, hash, dimensions, isOversize, bundleID, appName in
                 store.addImage(
                     data: data,
                     hash: hash,
                     dimensions: dimensions,
                     isOversize: isOversize,
+                    sourceAppBundleID: bundleID,
+                    sourceAppName: appName
+                )
+                self?.settings.recordCapture(
+                    type: .image,
+                    byteCount: data.count,
                     sourceAppBundleID: bundleID,
                     sourceAppName: appName
                 )
@@ -58,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         self.retentionSweeper = retentionSweeper
         retentionSweeper.start()
+        appUpdater = AppUpdater()
         cancellable = settings.$retentionPolicy.sink { [weak retentionSweeper] _ in
             DispatchQueue.main.async {
                 retentionSweeper?.runSweep()
@@ -69,7 +89,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             monitor: monitor,
             groupStore: groupStore,
             attachmentStore: attachmentStore,
-            settings: settings
+            settings: settings,
+            onCheckForUpdates: { [weak self] in
+                self?.appUpdater?.checkForUpdates()
+            },
+            canCheckForUpdates: { [weak self] in
+                self?.appUpdater?.canCheckForUpdates ?? false
+            }
         )
         store.onItemCaptured = { [weak controller] in
             DispatchQueue.main.async {

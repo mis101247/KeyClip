@@ -2,6 +2,7 @@
 .claude/
 .DS_Store
 DerivedData/
+dist/
 *.xcuserdata/
 *.xcuserstate
 KeyClip.app/

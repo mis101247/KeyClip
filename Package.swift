@@ -13,9 +13,15 @@ let package = Package(
             targets: ["KeyClip"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.1")
+    ],
     targets: [
         .executableTarget(
             name: "KeyClip",
+            dependencies: [
+                .product(name: "Sparkle", package: "Sparkle")
+            ],
             path: "KeyClip",
             sources: [
                 "KeyClipApp.swift",
@@ -35,6 +41,7 @@ let package = Package(
                 "Views/ClipboardPopoverView.swift",
                 "Views/ClipboardHistoryRowView.swift",
                 "Utilities/AppIconLoader.swift",
+                "Utilities/AppUpdater.swift",
                 "Utilities/ContentTypeDetector.swift",
                 "Utilities/GlobalHotkey.swift",
                 "Utilities/StringHashing.swift",

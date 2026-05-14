@@ -231,6 +231,18 @@ final class ClipboardHistoryStore: ObservableObject {
         save()
     }
 
+    func estimatedStorageBytes() -> Int {
+        items.reduce(0) { total, item in
+            var itemBytes = item.content.utf8.count
+            if let filename = item.attachmentFilename,
+               let attributes = try? FileManager.default.attributesOfItem(atPath: attachments.url(forFilename: filename).path),
+               let fileSize = attributes[.size] as? NSNumber {
+                itemBytes += fileSize.intValue
+            }
+            return total + itemBytes
+        }
+    }
+
     /// Remove items with createdAt before cutoff, exempting protectedIDs.
     func sweepExpired(olderThan cutoff: Date, protectedIDs: Set<UUID>) {
         let toRemove = items.filter { item in
