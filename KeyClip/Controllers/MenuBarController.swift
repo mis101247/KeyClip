@@ -9,6 +9,7 @@ final class MenuBarController: NSObject {
     private let settings: UserSettings
     private let onCheckForUpdates: () -> Void
     private let canCheckForUpdates: () -> Bool
+    private let popoverPresentationState = PopoverPresentationState()
     private let statusItem: NSStatusItem
     private let popover: NSPopover
     private var globalClickMonitor: Any?
@@ -67,6 +68,7 @@ final class MenuBarController: NSObject {
                 store: store,
                 groupStore: groupStore,
                 settings: settings,
+                presentationState: popoverPresentationState,
                 attachmentStore: attachmentStore,
                 onSelect: { [weak self] item in
                     if item.attachmentKind == .image {
@@ -177,6 +179,7 @@ final class MenuBarController: NSObject {
         guard let button = statusItem.button else { return }
 
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popoverPresentationState.markOpened()
         popover.contentViewController?.view.window?.makeKey()
         installGlobalClickMonitor()
     }
@@ -227,6 +230,14 @@ final class MenuBarController: NSObject {
             NSEvent.removeMonitor(globalClickMonitor)
             self.globalClickMonitor = nil
         }
+    }
+}
+
+final class PopoverPresentationState: ObservableObject {
+    @Published private(set) var openCount = 0
+
+    func markOpened() {
+        openCount += 1
     }
 }
 

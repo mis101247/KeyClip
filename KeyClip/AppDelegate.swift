@@ -153,6 +153,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     store: demo.historyStore,
                     groupStore: demo.groupStore,
                     settings: demo.settings,
+                    presentationState: PopoverPresentationState(),
                     attachmentStore: demo.attachmentStore,
                     onSelect: { _ in },
                     onClose: {},

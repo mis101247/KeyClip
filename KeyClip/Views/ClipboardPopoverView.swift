@@ -6,6 +6,7 @@ struct ClipboardPopoverView: View {
     @ObservedObject var store: ClipboardHistoryStore
     @ObservedObject var groupStore: ClipboardGroupStore
     @ObservedObject var settings: UserSettings
+    @ObservedObject var presentationState: PopoverPresentationState
     @State private var searchQuery: String = ""
     @State private var sidebarSelection: SidebarSelection = .all
     @State private var showClearConfirmation = false
@@ -187,6 +188,9 @@ struct ClipboardPopoverView: View {
         }
         .onChange(of: filteredItems) { _ in
             reconcileSelection()
+        }
+        .onChange(of: presentationState.openCount) { _ in
+            resetSelectionToFirstItem()
         }
         .alert(
             clearConfirmationTitle,
@@ -391,6 +395,10 @@ struct ClipboardPopoverView: View {
         }
 
         selectedItemID = filteredItems[0].id
+    }
+
+    private func resetSelectionToFirstItem() {
+        selectedItemID = filteredItems.first?.id
     }
 
     private func moveSelection(delta: Int) {

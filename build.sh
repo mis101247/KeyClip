@@ -16,6 +16,11 @@ RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 INFO_PLIST="${CONTENTS_DIR}/Info.plist"
 ICON_PATH="${RESOURCES_DIR}/AppIcon.icns"
 SPM_CACHE_DIR=".build/spm-cache"
+CLANG_CACHE_DIR=".build/clang-module-cache"
+WORKSPACE_STATE_FILE=".build/workspace-state.json"
+SPARKLE_ARTIFACT_DIR=".build/artifacts/sparkle/Sparkle"
+SPARKLE_EXTRACT_DIR=".build/artifacts/extract/sparkle"
+SPARKLE_XCFRAMEWORK_DIR="${SPARKLE_ARTIFACT_DIR}/Sparkle.xcframework"
 SPM_ARGS=(
     -c release
     --disable-sandbox
@@ -23,7 +28,28 @@ SPM_ARGS=(
     --manifest-cache local
 )
 
-export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-/tmp/${APP_NAME}-clang-module-cache}"
+export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-${CLANG_CACHE_DIR}}"
+
+CURRENT_DIR="$(pwd -P)"
+if [[ -f "${WORKSPACE_STATE_FILE}" ]] && ! grep -Fq "${CURRENT_DIR}/.build/artifacts" "${WORKSPACE_STATE_FILE}"; then
+    echo "Removing stale SwiftPM build state."
+    rm -rf \
+        "${WORKSPACE_STATE_FILE}" \
+        .build/artifacts \
+        .build/arm64-apple-macosx \
+        .build/debug \
+        .build/release \
+        .build/build.db \
+        .build/build.db-shm \
+        .build/build.db-wal \
+        .build/debug.yaml \
+        .build/release.yaml
+fi
+
+if [[ -d "${SPARKLE_XCFRAMEWORK_DIR}" && ! -f "${SPARKLE_XCFRAMEWORK_DIR}/Info.plist" ]]; then
+    echo "Removing incomplete Sparkle artifact cache."
+    rm -rf "${SPARKLE_ARTIFACT_DIR}" "${SPARKLE_EXTRACT_DIR}"
+fi
 
 swift build "${SPM_ARGS[@]}"
 
