@@ -185,10 +185,13 @@ final class MenuBarController: NSObject {
         closePopover()
 
         if settingsWindowController == nil {
-            let hostingController = NSHostingController(
+            let hostingView = FirstMouseHostingView(
                 rootView: SettingsPanelView(settings: settings, historyStore: store)
             )
-            let window = NSWindow(contentViewController: hostingController)
+            let viewController = NSViewController()
+            viewController.view = hostingView
+
+            let window = NSWindow(contentViewController: viewController)
             window.title = "KeyClip Settings"
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.minSize = NSSize(width: 720, height: 500)
@@ -224,5 +227,11 @@ final class MenuBarController: NSObject {
             NSEvent.removeMonitor(globalClickMonitor)
             self.globalClickMonitor = nil
         }
+    }
+}
+
+private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
     }
 }

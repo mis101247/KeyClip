@@ -559,6 +559,8 @@ struct SettingsPanelView: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
+                        .frame(width: 86, height: 78)
+                        .contentShape(RoundedRectangle(cornerRadius: Theme.radiusMd))
                         .background(
                             RoundedRectangle(cornerRadius: Theme.radiusMd)
                                 .fill(selectedTab == tab ? Theme.canvas.opacity(0.86) : Color.clear)
