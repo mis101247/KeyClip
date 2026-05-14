@@ -1,0 +1,123 @@
+"common.cancel" = "取消";
+"common.clear" = "清除";
+"common.copy" = "複製";
+"common.delete" = "刪除";
+"common.quit" = "離開";
+"common.save" = "儲存";
+
+"accessibility.captured" = "已擷取";
+"accessibility.clipboard_history" = "剪貼簿歷史";
+"window.settings_title" = "KeyClip 設定";
+
+"menu.resume_clipboard" = "恢復剪貼簿";
+"menu.pause_clipboard" = "暫停剪貼簿";
+"menu.settings" = "設定...";
+"menu.check_for_updates" = "檢查更新...";
+"menu.quit_keyclip" = "離開 KeyClip";
+
+"content_type.text" = "文字";
+"content_type.rich_text" = "格式文字";
+"content_type.image" = "圖片";
+"content_type.file" = "檔案";
+"content_type.files" = "多個檔案";
+"content_type.link" = "連結";
+"content_type.code" = "程式碼";
+"content_type.email" = "Email";
+"content_type.phone" = "電話";
+"content_type.color" = "顏色";
+"content_type.emoji" = "Emoji";
+
+"retention.forever" = "永久";
+"retention.one_day" = "1 天";
+"retention.seven_days" = "7 天";
+"retention.thirty_days" = "30 天";
+
+"sidebar.clipboard" = "剪貼簿";
+"sidebar.search_placeholder" = "搜尋剪貼簿...";
+"sidebar.all" = "全部";
+"sidebar.tags" = "標籤";
+"sidebar.content_types" = "內容格式";
+"sidebar.groups" = "群組";
+"sidebar.new_group" = "新增群組";
+"sidebar.actions" = "操作";
+"sidebar.group_actions" = "群組操作";
+"sidebar.rename" = "重新命名";
+"sidebar.change_icon" = "更換圖示";
+"sidebar.group_name_placeholder" = "群組名稱";
+
+"popover.clear_all" = "清除全部";
+"popover.clear_all_in_type" = "清除所有 %@";
+"popover.clear_all_title" = "清除所有剪貼簿項目？";
+"popover.clear_type_title" = "清除所有 %@ 項目？";
+"popover.clear_confirmation_message" = "將移除 %d 個項目。標籤與自訂群組中的項目會保留。";
+
+"empty.no_history_title" = "還沒有歷史紀錄";
+"empty.no_history_hint" = "複製一些內容就會開始記錄";
+"empty.no_tags_title" = "還沒有標籤";
+"empty.no_tags_hint" = "右鍵點選項目即可加入標題";
+"empty.no_type_title" = "還沒有 %@ 項目";
+"empty.copy_to_add" = "複製一些內容即可加入";
+"empty.group_empty_title" = "群組是空的";
+"empty.group_empty_hint" = "右鍵點選項目即可加入群組";
+"empty.no_matches_title" = "找不到符合項目";
+"empty.no_matches_hint" = "沒有「%@」的搜尋結果";
+
+"clip.add_title" = "加入標題";
+"clip.edit_title" = "編輯標題";
+"clip.clear_title" = "清除標題";
+"clip.no_custom_groups" = "還沒有自訂群組";
+"clip.add_to_group" = "加入群組";
+"clip.auto_deletes_24h" = "24 小時後自動刪除";
+
+"title_editor.title" = "項目標題";
+"title_editor.placeholder" = "為什麼複製這段內容？";
+
+"settings.tab.general" = "通用";
+"settings.tab.exclusions" = "排除規則";
+"settings.tab.statistics" = "統計";
+"settings.tab.about" = "關於";
+
+"settings.language.section" = "語言";
+"settings.language.label" = "語言";
+"settings.language.system" = "跟隨系統";
+"settings.language.restart_hint" = "重新開啟 KeyClip 後套用語言變更。";
+
+"settings.general.launch_section" = "啟動";
+"settings.general.launch_at_login" = "登入時啟動";
+"settings.general.retention_section" = "保存期限";
+"settings.general.keep_history_for" = "保留歷史";
+"settings.general.retention_hint" = "標籤與自訂群組中的項目不會過期。";
+"settings.general.storage_section" = "目前佔用空間";
+"settings.general.stored_items" = "保留筆數";
+"settings.general.item_count" = "%d 筆";
+"settings.general.estimated_size" = "估算大小";
+
+"settings.exclusions.by_app" = "根據 App";
+"settings.exclusions.by_app_hint" = "如果目前 App 在排除列表中，KeyClip 會忽略從它複製的內容。";
+"settings.exclusions.formats" = "排除格式";
+"settings.exclusions.by_size" = "根據容量";
+"settings.exclusions.do_not_capture_over" = "不要收錄超過";
+"settings.exclusions.max_size_picker" = "最大容量";
+"settings.exclusions.size_hint" = "KeyClip 仍有 100 MB 的安全硬上限。容量規則會在保存前先套用。";
+"settings.exclusions.no_apps_title" = "尚未排除任何 App";
+"settings.exclusions.no_apps_hint" = "按下方 + 加入不想讓 KeyClip 記錄的 App。";
+"settings.exclusions.add_app" = "加入 App";
+"settings.exclusions.remove_app" = "移除 App";
+
+"settings.statistics.overview" = "總覽";
+"settings.statistics.total_captures" = "累積剪貼";
+"settings.statistics.top_format" = "最常見格式";
+"settings.statistics.top_source" = "最常見來源";
+"settings.statistics.clear" = "清除統計";
+"settings.statistics.top_formats" = "Top 5 複製格式";
+"settings.statistics.top_apps" = "Top 5 複製來源 App";
+"settings.statistics.no_format_data" = "還沒有格式統計資料";
+"settings.statistics.no_app_data" = "還沒有來源 App 統計資料";
+
+"about.tagline" = "輕輕做好一件事，讓你的每一天多一點餘裕。";
+
+"open_panel.exclude_app.title" = "選擇要排除的 App";
+"open_panel.exclude_app.prompt" = "排除";
+"open_panel.exclude_app.message" = "從這個 App 複製的內容不會被 KeyClip 記錄。";
+
+"stats.unknown_app" = "未知 App";

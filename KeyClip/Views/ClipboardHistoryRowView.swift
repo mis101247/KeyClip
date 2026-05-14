@@ -131,7 +131,7 @@ struct ClipboardHistoryRowView: View {
         .shadow(color: (isSelected || isHovered) ? Theme.softShadowLight : Color.clear, radius: 12, x: 0, y: 4)
         .contentShape(Rectangle())
         .contextMenu {
-            Button("Copy") {
+            Button(L10n.tr("common.copy")) {
                 onCopy()
             }
 
@@ -140,21 +140,21 @@ struct ClipboardHistoryRowView: View {
             Button {
                 isEditingTitle = true
             } label: {
-                Label(titleText == nil ? "Add Title" : "Edit Title", systemImage: "pencil")
+                Label(titleText == nil ? L10n.tr("clip.add_title") : L10n.tr("clip.edit_title"), systemImage: "pencil")
             }
 
             if titleText != nil {
                 Button {
                     onUpdateTitle("")
                 } label: {
-                    Label("Clear Title", systemImage: "xmark.circle")
+                    Label(L10n.tr("clip.clear_title"), systemImage: "xmark.circle")
                 }
             }
 
             Divider()
 
             if groupStore.groups.isEmpty {
-                Text("No custom groups yet")
+                Text(L10n.tr("clip.no_custom_groups"))
             } else {
                 Menu {
                     ForEach(groupStore.groups) { group in
@@ -169,7 +169,7 @@ struct ClipboardHistoryRowView: View {
                         }
                     }
                 } label: {
-                    Label("Add to Group", systemImage: "folder.badge.plus")
+                    Label(L10n.tr("clip.add_to_group"), systemImage: "folder.badge.plus")
                 }
             }
 
@@ -178,7 +178,7 @@ struct ClipboardHistoryRowView: View {
             Button(role: .destructive) {
                 onDelete()
             } label: {
-                Label("Delete", systemImage: "trash")
+                Label(L10n.tr("common.delete"), systemImage: "trash")
             }
         }
         .onHover { hovering in
@@ -258,7 +258,7 @@ struct ClipboardHistoryRowView: View {
         }
         .font(Theme.textXs)
         .foregroundStyle(Theme.sunset)
-        .help("Auto-deletes after 24 hours")
+        .help(L10n.tr("clip.auto_deletes_24h"))
     }
 
     @ViewBuilder
@@ -343,7 +343,7 @@ private struct ClipboardItemTitleEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: editorSpacing) {
-            Text("Item Title")
+            Text(L10n.tr("title_editor.title"))
                 .font(Theme.headingSm)
                 .tracking(Theme.headingTracking)
                 .foregroundStyle(Theme.text)
@@ -354,18 +354,18 @@ private struct ClipboardItemTitleEditor: View {
                 .lineLimit(2)
                 .truncationMode(.tail)
 
-            TextField("Why did you copy this?", text: $draftTitle)
+            TextField(L10n.tr("title_editor.placeholder"), text: $draftTitle)
                 .textFieldStyle(.roundedBorder)
 
             HStack {
                 Spacer()
 
-                Button("Cancel") {
+                Button(L10n.tr("common.cancel")) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
 
-                Button("Save") {
+                Button(L10n.tr("common.save")) {
                     onSave(draftTitle)
                     dismiss()
                 }

@@ -92,7 +92,7 @@ struct SidebarView: View {
 
     private var sidebarHeader: some View {
         HStack(spacing: 8) {
-            Text("Clipboard")
+            Text(L10n.tr("sidebar.clipboard"))
                 .font(Theme.headingSm)
                 .tracking(Theme.headingTracking)
                 .foregroundStyle(Theme.text)
@@ -107,7 +107,7 @@ struct SidebarView: View {
     }
 
     private var searchField: some View {
-        TextField("Search clipboard…", text: $searchQuery)
+        TextField(L10n.tr("sidebar.search_placeholder"), text: $searchQuery)
             .textFieldStyle(.plain)
             .focused($isSearchFocused)
             .font(Theme.textXs)
@@ -137,7 +137,7 @@ struct SidebarView: View {
     private var allSection: some View {
         SidebarRow(
             systemImage: "tray.full",
-            title: "All",
+            title: L10n.tr("sidebar.all"),
             count: historyStore.items.count,
             tintColor: Theme.textMuted,
             isSelected: selection == .all
@@ -154,7 +154,7 @@ struct SidebarView: View {
         }
 
         if !visibleTypes.isEmpty {
-            SectionHeader(title: "CONTENT TYPES")
+            SectionHeader(title: L10n.tr("sidebar.content_types"))
 
             ForEach(visibleTypes, id: \.0) { type, count in
                 SidebarRow(
@@ -172,7 +172,7 @@ struct SidebarView: View {
 
     private var groupsSection: some View {
         VStack(alignment: .leading, spacing: sectionSpacing) {
-            SectionHeader(title: "GROUPS") {
+            SectionHeader(title: L10n.tr("sidebar.groups")) {
                 Button {
                     startAddingGroup()
                 } label: {
@@ -183,7 +183,7 @@ struct SidebarView: View {
                 }
                 .buttonStyle(.plain)
                 .modifier(SidebarHoverBackground())
-                .help("New group")
+                .help(L10n.tr("sidebar.new_group"))
             }
 
             if isAddingGroup {
@@ -215,7 +215,7 @@ struct SidebarView: View {
     private var tagsRow: some View {
         SidebarRow(
             systemImage: "tag.fill",
-            title: "Tags",
+            title: L10n.tr("sidebar.tags"),
             count: taggedItemsCount,
             tintColor: Theme.primary,
             isSelected: selection == .tags
@@ -264,22 +264,22 @@ struct SidebarView: View {
                     .font(.system(size: menuIconSize, weight: .semibold))
                     .frame(width: menuButtonSize, height: menuButtonSize)
             case .text:
-                Text("Actions")
+                Text(L10n.tr("sidebar.actions"))
             }
         }
         .menuStyle(.borderlessButton)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
-        .help("Group actions")
+        .help(L10n.tr("sidebar.group_actions"))
     }
 
     @ViewBuilder
     private func groupActionItems(for group: ClipboardGroup) -> some View {
-        Button("Rename") {
+        Button(L10n.tr("sidebar.rename")) {
             startRenaming(group)
         }
 
-        Menu("Change Icon") {
+        Menu(L10n.tr("sidebar.change_icon")) {
             ForEach(iconChoices, id: \.self) { systemImage in
                 Button {
                     groupStore.updateIcon(id: group.id, to: systemImage)
@@ -291,7 +291,7 @@ struct SidebarView: View {
 
         Divider()
 
-        Button("Delete", role: .destructive) {
+        Button(L10n.tr("common.delete"), role: .destructive) {
             groupStore.deleteGroup(id: group.id)
             if selection == .group(group.id) {
                 selection = .all
@@ -305,7 +305,7 @@ struct SidebarView: View {
         onSubmit: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) -> some View {
-        TextField("Group name", text: text)
+        TextField(L10n.tr("sidebar.group_name_placeholder"), text: text)
             .textFieldStyle(.plain)
             .focused($focusedField, equals: focus)
             .onSubmit(onSubmit)

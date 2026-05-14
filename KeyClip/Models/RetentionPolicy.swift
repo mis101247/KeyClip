@@ -10,10 +10,10 @@ enum RetentionPolicy: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .forever: return "Forever"
-        case .oneDay: return "1 Day"
-        case .sevenDays: return "7 Days"
-        case .thirtyDays: return "30 Days"
+        case .forever: return L10n.tr("retention.forever")
+        case .oneDay: return L10n.tr("retention.one_day")
+        case .sevenDays: return L10n.tr("retention.seven_days")
+        case .thirtyDays: return L10n.tr("retention.thirty_days")
         }
     }
 

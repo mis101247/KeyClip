@@ -89,24 +89,24 @@ struct ClipboardPopoverView: View {
     private var listTitle: String {
         switch sidebarSelection {
         case .all:
-            return "All"
+            return L10n.tr("sidebar.all")
         case .tags:
-            return "Tags"
+            return L10n.tr("sidebar.tags")
         case .contentType(let type):
             return type.displayName
         case .group(let groupID):
-            return groupStore.groups.first(where: { $0.id == groupID })?.name ?? "All"
+            return groupStore.groups.first(where: { $0.id == groupID })?.name ?? L10n.tr("sidebar.all")
         }
     }
 
     private var clearScopeLabel: String {
         switch sidebarSelection {
         case .all:
-            return "Clear All"
+            return L10n.tr("popover.clear_all")
         case .tags:
             return ""
         case .contentType(let type):
-            return "Clear all in \(type.displayName) type"
+            return L10n.tr("popover.clear_all_in_type", type.displayName)
         case .group:
             return ""
         }
@@ -115,11 +115,11 @@ struct ClipboardPopoverView: View {
     private var clearConfirmationTitle: String {
         switch sidebarSelection {
         case .all:
-            return "Clear all clipboard items?"
+            return L10n.tr("popover.clear_all_title")
         case .tags:
             return ""
         case .contentType(let type):
-            return "Clear all \(type.displayName) items?"
+            return L10n.tr("popover.clear_type_title", type.displayName)
         case .group:
             return ""
         }
@@ -127,8 +127,7 @@ struct ClipboardPopoverView: View {
 
     private var clearConfirmationMessage: String {
         let count = clearableItems.count
-        let noun = count == 1 ? "item" : "items"
-        return "\(count) \(noun) will be removed. Items in Tags or custom groups will be kept."
+        return L10n.tr("popover.clear_confirmation_message", count)
     }
 
     private var shouldShowClearButton: Bool {
@@ -193,8 +192,8 @@ struct ClipboardPopoverView: View {
             clearConfirmationTitle,
             isPresented: $showClearConfirmation
         ) {
-            Button("Cancel", role: .cancel) { }
-            Button("Clear", role: .destructive) {
+            Button(L10n.tr("common.cancel"), role: .cancel) { }
+            Button(L10n.tr("common.clear"), role: .destructive) {
                 performScopedClear()
             }
         } message: {
@@ -228,33 +227,33 @@ struct ClipboardPopoverView: View {
             case .all:
                 emptyState(
                     systemImage: "doc.on.clipboard",
-                    title: "No history yet",
-                    hint: "Copy something to get started"
+                    title: L10n.tr("empty.no_history_title"),
+                    hint: L10n.tr("empty.no_history_hint")
                 )
             case .tags:
                 emptyState(
                     systemImage: "tag",
-                    title: "No tags yet",
-                    hint: "Right-click an item to add a title"
+                    title: L10n.tr("empty.no_tags_title"),
+                    hint: L10n.tr("empty.no_tags_hint")
                 )
             case .contentType(let type):
                 emptyState(
                     systemImage: type.systemImage,
-                    title: "No items of type \(type.displayName)",
-                    hint: "Copy something to add"
+                    title: L10n.tr("empty.no_type_title", type.displayName),
+                    hint: L10n.tr("empty.copy_to_add")
                 )
             case .group:
                 emptyState(
                     systemImage: "folder",
-                    title: "Group is empty",
-                    hint: "Right-click an item to add it"
+                    title: L10n.tr("empty.group_empty_title"),
+                    hint: L10n.tr("empty.group_empty_hint")
                 )
             }
         } else if filteredItems.isEmpty {
             emptyState(
                 systemImage: "magnifyingglass",
-                title: "No matches",
-                hint: "No results for '\(trimmedSearchQuery)'"
+                title: L10n.tr("empty.no_matches_title"),
+                hint: L10n.tr("empty.no_matches_hint", trimmedSearchQuery)
             )
         } else {
             ScrollViewReader { proxy in
@@ -332,7 +331,7 @@ struct ClipboardPopoverView: View {
                 Button {
                     NSApplication.shared.terminate(nil)
                 } label: {
-                    Text("Quit")
+                    Text(L10n.tr("common.quit"))
                 }
                 .buttonStyle(.plain)
                 .font(Theme.textXs)
@@ -479,10 +478,10 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .general: return "通用"
-        case .exclusion: return "排除規則"
-        case .statistics: return "統計"
-        case .about: return "關於"
+        case .general: return L10n.tr("settings.tab.general")
+        case .exclusion: return L10n.tr("settings.tab.exclusions")
+        case .statistics: return L10n.tr("settings.tab.statistics")
+        case .about: return L10n.tr("settings.tab.about")
         }
     }
 
@@ -585,19 +584,40 @@ struct SettingsPanelView: View {
 
     private var generalSettings: some View {
         SettingsContent {
-            SettingsSection(title: "啟動") {
-                Toggle("Launch at Login", isOn: launchAtLoginBinding)
+            SettingsSection(title: L10n.tr("settings.general.launch_section")) {
+                Toggle(L10n.tr("settings.general.launch_at_login"), isOn: launchAtLoginBinding)
                     .font(Theme.textSm)
                     .foregroundStyle(Theme.text)
             }
 
-            SettingsSection(title: "保存期限") {
+            SettingsSection(title: L10n.tr("settings.language.section")) {
                 HStack(spacing: 12) {
-                    Text("Keep History For")
+                    Text(L10n.tr("settings.language.label"))
                         .font(Theme.textSm)
                         .foregroundStyle(Theme.text)
 
-                    Picker("Keep History For", selection: $settings.retentionPolicy) {
+                    Picker(L10n.tr("settings.language.label"), selection: $settings.appLanguage) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 180)
+                }
+
+                Text(L10n.tr("settings.language.restart_hint"))
+                    .font(Theme.textXs)
+                    .foregroundStyle(Theme.textMuted)
+            }
+
+            SettingsSection(title: L10n.tr("settings.general.retention_section")) {
+                HStack(spacing: 12) {
+                    Text(L10n.tr("settings.general.keep_history_for"))
+                        .font(Theme.textSm)
+                        .foregroundStyle(Theme.text)
+
+                    Picker(L10n.tr("settings.general.keep_history_for"), selection: $settings.retentionPolicy) {
                         ForEach(RetentionPolicy.allCases) { policy in
                             Text(policy.displayName).tag(policy)
                         }
@@ -607,15 +627,15 @@ struct SettingsPanelView: View {
                     .frame(width: 150)
                 }
 
-                Text("Items in Tags or custom groups never expire.")
+                Text(L10n.tr("settings.general.retention_hint"))
                     .font(Theme.textXs)
                     .foregroundStyle(Theme.textMuted)
             }
 
-            SettingsSection(title: "目前佔用空間") {
+            SettingsSection(title: L10n.tr("settings.general.storage_section")) {
                 HStack(spacing: 12) {
-                    StatPill(title: "保留筆數", value: "\(historyStore.items.count) items")
-                    StatPill(title: "估算大小", value: formattedBytes(historyStore.estimatedStorageBytes()))
+                    StatPill(title: L10n.tr("settings.general.stored_items"), value: L10n.tr("settings.general.item_count", historyStore.items.count))
+                    StatPill(title: L10n.tr("settings.general.estimated_size"), value: formattedBytes(historyStore.estimatedStorageBytes()))
                 }
             }
         }
@@ -623,15 +643,15 @@ struct SettingsPanelView: View {
 
     private var exclusionSettings: some View {
         SettingsContent {
-            SettingsSection(title: "根據 App") {
-                Text("如果當前 App 在「排除列表」中，KeyClip 會忽略複製操作。")
+            SettingsSection(title: L10n.tr("settings.exclusions.by_app")) {
+                Text(L10n.tr("settings.exclusions.by_app_hint"))
                     .font(Theme.textXs)
                     .foregroundStyle(Theme.textMuted)
 
                 excludedAppsList
             }
 
-            SettingsSection(title: "排除格式") {
+            SettingsSection(title: L10n.tr("settings.exclusions.formats")) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
                     ForEach(ContentType.allCases) { type in
                         ExcludedContentTypeChip(
@@ -644,13 +664,13 @@ struct SettingsPanelView: View {
                 }
             }
 
-            SettingsSection(title: "根據容量") {
+            SettingsSection(title: L10n.tr("settings.exclusions.by_size")) {
                 HStack(spacing: 12) {
-                    Text("不要收錄超過")
+                    Text(L10n.tr("settings.exclusions.do_not_capture_over"))
                         .font(Theme.textSm)
                         .foregroundStyle(Theme.text)
 
-                    Picker("最大容量", selection: $settings.maxCaptureBytes) {
+                    Picker(L10n.tr("settings.exclusions.max_size_picker"), selection: $settings.maxCaptureBytes) {
                         ForEach(maxCaptureByteOptions, id: \.self) { bytes in
                             Text(formattedBytes(bytes)).tag(bytes)
                         }
@@ -660,7 +680,7 @@ struct SettingsPanelView: View {
                     .frame(width: 150)
                 }
 
-                Text("KeyClip 仍有 100 MB 的安全硬上限。容量規則會在保存前先套用。")
+                Text(L10n.tr("settings.exclusions.size_hint"))
                     .font(Theme.textXs)
                     .foregroundStyle(Theme.textMuted)
             }
@@ -688,11 +708,11 @@ struct SettingsPanelView: View {
                                 .font(.system(size: 28, weight: .regular))
                                 .foregroundStyle(Theme.textFaint)
 
-                            Text("尚未排除任何 App")
+                            Text(L10n.tr("settings.exclusions.no_apps_title"))
                                 .font(Theme.textSmEmphasis)
                                 .foregroundStyle(Theme.text)
 
-                            Text("按左下角 + 加入不想記錄剪貼簿的 App。")
+                            Text(L10n.tr("settings.exclusions.no_apps_hint"))
                                 .font(Theme.textXs)
                                 .foregroundStyle(Theme.textMuted)
                         }
@@ -719,7 +739,7 @@ struct SettingsPanelView: View {
                         .frame(width: 32, height: 26)
                 }
                 .buttonStyle(.plain)
-                .help("加入 App")
+                .help(L10n.tr("settings.exclusions.add_app"))
 
                 Divider()
                     .frame(height: 18)
@@ -733,7 +753,7 @@ struct SettingsPanelView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(selectedExcludedAppID == nil)
-                .help("移除 App")
+                .help(L10n.tr("settings.exclusions.remove_app"))
             }
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSm)
@@ -745,26 +765,26 @@ struct SettingsPanelView: View {
 
     private var statisticsSettings: some View {
         SettingsContent {
-            SettingsSection(title: "總覽") {
+            SettingsSection(title: L10n.tr("settings.statistics.overview")) {
                 HStack(spacing: 12) {
-                    StatPill(title: "累積剪貼", value: "\(settings.captureStatistics.totalCount)")
-                    StatPill(title: "最常見格式", value: rankedTypeStatistics.first?.name ?? "-")
-                    StatPill(title: "最常見來源", value: rankedAppStatistics.first?.name ?? "-")
+                    StatPill(title: L10n.tr("settings.statistics.total_captures"), value: "\(settings.captureStatistics.totalCount)")
+                    StatPill(title: L10n.tr("settings.statistics.top_format"), value: rankedTypeStatistics.first.map(localizedStatName) ?? "-")
+                    StatPill(title: L10n.tr("settings.statistics.top_source"), value: rankedAppStatistics.first?.name ?? "-")
                 }
 
-                Button("清除統計") {
+                Button(L10n.tr("settings.statistics.clear")) {
                     settings.resetCaptureStatistics()
                 }
                 .buttonStyle(.bordered)
                 .disabled(settings.captureStatistics.totalCount == 0)
             }
 
-            SettingsSection(title: "Top 5 複製格式") {
-                RankingTable(entries: Array(rankedTypeStatistics.prefix(5)), emptyText: "還沒有格式統計資料")
+            SettingsSection(title: L10n.tr("settings.statistics.top_formats")) {
+                RankingTable(entries: Array(rankedTypeStatistics.prefix(5)), emptyText: L10n.tr("settings.statistics.no_format_data"), nameProvider: localizedStatName)
             }
 
-            SettingsSection(title: "Top 5 複製來源 App") {
-                RankingTable(entries: Array(rankedAppStatistics.prefix(5)), emptyText: "還沒有來源 App 統計資料")
+            SettingsSection(title: L10n.tr("settings.statistics.top_apps")) {
+                RankingTable(entries: Array(rankedAppStatistics.prefix(5)), emptyText: L10n.tr("settings.statistics.no_app_data"))
             }
         }
     }
@@ -780,7 +800,7 @@ struct SettingsPanelView: View {
                 .tracking(Theme.headingTracking)
                 .foregroundStyle(Theme.text)
 
-            Text("輕輕做好一件事，讓你的每一天多一點餘裕。")
+            Text(L10n.tr("about.tagline"))
                 .font(Theme.textSm)
                 .foregroundStyle(Theme.textMuted)
         }
@@ -812,11 +832,15 @@ struct SettingsPanelView: View {
         }
     }
 
+    private func localizedStatName(_ entry: CaptureStatEntry) -> String {
+        ContentType(rawValue: entry.id)?.displayName ?? entry.name
+    }
+
     private func chooseExcludedAppForExclusion() {
         let panel = NSOpenPanel()
-        panel.title = "選擇要排除的 App"
-        panel.prompt = "排除"
-        panel.message = "從這個 App 複製的內容不會被 KeyClip 記錄。"
+        panel.title = L10n.tr("open_panel.exclude_app.title")
+        panel.prompt = L10n.tr("open_panel.exclude_app.prompt")
+        panel.message = L10n.tr("open_panel.exclude_app.message")
         panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
         panel.allowedContentTypes = [.applicationBundle]
         panel.allowsMultipleSelection = false
@@ -1044,6 +1068,7 @@ private struct StatPill: View {
 private struct RankingTable: View {
     let entries: [CaptureStatEntry]
     let emptyText: String
+    var nameProvider: (CaptureStatEntry) -> String = { $0.name }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -1060,7 +1085,7 @@ private struct RankingTable: View {
                             .foregroundStyle(Theme.textFaint)
                             .frame(width: 34, alignment: .leading)
 
-                        Text(entry.name)
+                        Text(nameProvider(entry))
                             .font(Theme.textSm)
                             .foregroundStyle(Theme.text)
                             .lineLimit(1)

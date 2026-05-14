@@ -149,8 +149,11 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
    - `Utilities/ContentTypeDetector.swift`
    - `Utilities/AppIconLoader.swift`
    - `Utilities/GlobalHotkey.swift`
+   - `Utilities/L10n.swift`
    - `Utilities/StringHashing.swift`
    - `Utilities/UserSettings.swift`
+   - `Resources/en.lproj/Localizable.strings`
+   - `Resources/zh-Hant.lproj/Localizable.strings`
 
 ### Frameworks and Settings
 
@@ -182,6 +185,12 @@ Generate the screenshots:
 ./scripts/capture_screenshots.sh
 ```
 
+The script defaults to English for stable README output. Pass `DEMO_LANGUAGE=zh-Hant` to capture the Traditional Chinese UI:
+
+```sh
+DEMO_LANGUAGE=zh-Hant ./scripts/capture_screenshots.sh
+```
+
 Update the README screenshot block:
 
 ```sh
@@ -189,6 +198,27 @@ Update the README screenshot block:
 ```
 
 The capture script writes PNG files to `docs/assets/screenshots/`. Demo mode renders the SwiftUI window content from inside the app process, so it does not require macOS Screen Recording permission.
+
+## Localization
+
+KeyClip uses Apple `.lproj` resource folders and `Localizable.strings` files through the `L10n.tr(_:)` helper. The initial supported languages are English (`Resources/en.lproj/Localizable.strings`) and Traditional Chinese (`Resources/zh-Hant.lproj/Localizable.strings`).
+
+Users can choose **Follow System**, **English**, or **Traditional Chinese** from Settings > General > Language. The setting is persisted as `appLanguage` with one of these values:
+
+- `system`
+- `en`
+- `zh-Hant`
+
+Language is resolved once at app launch. If the user changes it in Settings, they need to restart KeyClip before the UI language changes.
+
+In normal app usage, language follows the user's macOS language preferences. For deterministic demo and screenshot runs, set `KEYCLIP_LANGUAGE=en` / `KEYCLIP_LANGUAGE=zh-Hant` or pass the launch argument `-KeyClipLanguage en`.
+
+To add another language:
+
+1. Create a new resource folder, for example `KeyClip/Resources/ja.lproj/`.
+2. Copy `Localizable.strings` from `en.lproj`.
+3. Translate the values while keeping every key unchanged.
+4. Run `swift build` and `./build.sh` to verify both SwiftPM and the assembled app bundle include the resource bundle.
 
 ## Architecture
 

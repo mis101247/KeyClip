@@ -7,17 +7,17 @@ enum ContentType: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .text: return "Text"
-        case .richText: return "Rich Text"
-        case .image: return "Image"
-        case .file: return "File"
-        case .files: return "Files"
-        case .link: return "Link"
-        case .code: return "Code"
-        case .email: return "Email"
-        case .phone: return "Phone"
-        case .color: return "Color"
-        case .emoji: return "Emoji"
+        case .text: return L10n.tr("content_type.text")
+        case .richText: return L10n.tr("content_type.rich_text")
+        case .image: return L10n.tr("content_type.image")
+        case .file: return L10n.tr("content_type.file")
+        case .files: return L10n.tr("content_type.files")
+        case .link: return L10n.tr("content_type.link")
+        case .code: return L10n.tr("content_type.code")
+        case .email: return L10n.tr("content_type.email")
+        case .phone: return L10n.tr("content_type.phone")
+        case .color: return L10n.tr("content_type.color")
+        case .emoji: return L10n.tr("content_type.emoji")
         }
     }
 

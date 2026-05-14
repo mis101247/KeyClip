@@ -140,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch target {
         case .settingsGeneral:
             rootView = AnyView(SettingsPanelView(settings: demo.settings, historyStore: demo.historyStore))
-            size = NSSize(width: 760, height: 540)
+            size = NSSize(width: 760, height: 620)
         case .settingsExclusions:
             rootView = AnyView(SettingsPanelView(settings: demo.settings, historyStore: demo.historyStore, initialTab: .exclusion))
             size = NSSize(width: 760, height: 620)
@@ -200,8 +200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             contentView.cacheDisplay(in: bounds, to: bitmap)
 
-            guard let flattenedBitmap = Self.flattenForScreenshot(bitmap, size: bounds.size),
-                  let data = flattenedBitmap.representation(using: .png, properties: [:]) else {
+            guard let data = bitmap.representation(using: .png, properties: [:]) else {
                 fputs("Could not encode demo window PNG\n", stderr)
                 NSApp.terminate(nil)
                 return
@@ -226,45 +225,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSColor(red: 250 / 255, green: 251 / 255, blue: 252 / 255, alpha: 1)
     }
 
-    private static func flattenForScreenshot(_ source: NSBitmapImageRep, size: NSSize) -> NSBitmapImageRep? {
-        let scale = max(source.pixelsWide / max(Int(size.width), 1), 1)
-        guard let output = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: max(Int(size.width) * scale, 1),
-            pixelsHigh: max(Int(size.height) * scale, 1),
-            bitsPerSample: 8,
-            samplesPerPixel: 3,
-            hasAlpha: false,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bytesPerRow: 0,
-            bitsPerPixel: 0
-        ) else {
-            return nil
-        }
-
-        output.size = size
-        let image = NSImage(size: size)
-        image.addRepresentation(source)
-
-        NSGraphicsContext.saveGraphicsState()
-        defer { NSGraphicsContext.restoreGraphicsState() }
-
-        guard let context = NSGraphicsContext(bitmapImageRep: output) else {
-            return nil
-        }
-
-        NSGraphicsContext.current = context
-        demoCanvasColor.setFill()
-        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
-        image.draw(
-            in: NSRect(origin: .zero, size: size),
-            from: NSRect(origin: .zero, size: size),
-            operation: .sourceOver,
-            fraction: 1
-        )
-        context.flushGraphics()
-
-        return output
-    }
 }

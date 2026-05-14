@@ -57,6 +57,7 @@ final class UserSettings: ObservableObject {
     private let defaults: UserDefaults
     private let retentionKey = "retentionPolicy"
     private let launchAtLoginKey = "launchAtLogin"
+    private let appLanguageKey = "appLanguage"
     private let excludedAppsKey = "excludedApps"
     private let excludedContentTypesKey = "excludedContentTypes"
     private let maxCaptureBytesKey = "maxCaptureBytes"
@@ -71,6 +72,12 @@ final class UserSettings: ObservableObject {
     @Published private(set) var excludedApps: [ExcludedApp] {
         didSet {
             saveExcludedApps()
+        }
+    }
+
+    @Published var appLanguage: AppLanguage {
+        didSet {
+            defaults.set(appLanguage.rawValue, forKey: appLanguageKey)
         }
     }
 
@@ -118,6 +125,13 @@ final class UserSettings: ObservableObject {
             self.retentionPolicy = value
         } else {
             self.retentionPolicy = .sevenDays
+        }
+
+        if let raw = defaults.string(forKey: appLanguageKey),
+           let value = AppLanguage(rawValue: raw) {
+            self.appLanguage = value
+        } else {
+            self.appLanguage = .system
         }
 
         if let data = defaults.data(forKey: excludedAppsKey),
@@ -206,7 +220,7 @@ final class UserSettings: ObservableObject {
         updated.byType[type.rawValue] = typeEntry
 
         let appID = sourceAppBundleID ?? "unknown"
-        let appName = sourceAppName?.isEmpty == false ? sourceAppName! : "Unknown App"
+        let appName = sourceAppName?.isEmpty == false ? sourceAppName! : L10n.tr("stats.unknown_app")
         var appEntry = updated.byApp[appID] ?? CaptureStatEntry(
             id: appID,
             name: appName,

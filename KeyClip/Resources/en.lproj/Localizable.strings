@@ -1,0 +1,123 @@
+"common.cancel" = "Cancel";
+"common.clear" = "Clear";
+"common.copy" = "Copy";
+"common.delete" = "Delete";
+"common.quit" = "Quit";
+"common.save" = "Save";
+
+"accessibility.captured" = "Captured";
+"accessibility.clipboard_history" = "Clipboard History";
+"window.settings_title" = "KeyClip Settings";
+
+"menu.resume_clipboard" = "Resume Clipboard";
+"menu.pause_clipboard" = "Pause Clipboard";
+"menu.settings" = "Settings...";
+"menu.check_for_updates" = "Check for Updates...";
+"menu.quit_keyclip" = "Quit KeyClip";
+
+"content_type.text" = "Text";
+"content_type.rich_text" = "Rich Text";
+"content_type.image" = "Image";
+"content_type.file" = "File";
+"content_type.files" = "Files";
+"content_type.link" = "Link";
+"content_type.code" = "Code";
+"content_type.email" = "Email";
+"content_type.phone" = "Phone";
+"content_type.color" = "Color";
+"content_type.emoji" = "Emoji";
+
+"retention.forever" = "Forever";
+"retention.one_day" = "1 Day";
+"retention.seven_days" = "7 Days";
+"retention.thirty_days" = "30 Days";
+
+"sidebar.clipboard" = "Clipboard";
+"sidebar.search_placeholder" = "Search clipboard...";
+"sidebar.all" = "All";
+"sidebar.tags" = "Tags";
+"sidebar.content_types" = "CONTENT TYPES";
+"sidebar.groups" = "GROUPS";
+"sidebar.new_group" = "New group";
+"sidebar.actions" = "Actions";
+"sidebar.group_actions" = "Group actions";
+"sidebar.rename" = "Rename";
+"sidebar.change_icon" = "Change Icon";
+"sidebar.group_name_placeholder" = "Group name";
+
+"popover.clear_all" = "Clear All";
+"popover.clear_all_in_type" = "Clear all in %@ type";
+"popover.clear_all_title" = "Clear all clipboard items?";
+"popover.clear_type_title" = "Clear all %@ items?";
+"popover.clear_confirmation_message" = "%d items will be removed. Items in Tags or custom groups will be kept.";
+
+"empty.no_history_title" = "No history yet";
+"empty.no_history_hint" = "Copy something to get started";
+"empty.no_tags_title" = "No tags yet";
+"empty.no_tags_hint" = "Right-click an item to add a title";
+"empty.no_type_title" = "No items of type %@";
+"empty.copy_to_add" = "Copy something to add";
+"empty.group_empty_title" = "Group is empty";
+"empty.group_empty_hint" = "Right-click an item to add it";
+"empty.no_matches_title" = "No matches";
+"empty.no_matches_hint" = "No results for '%@'";
+
+"clip.add_title" = "Add Title";
+"clip.edit_title" = "Edit Title";
+"clip.clear_title" = "Clear Title";
+"clip.no_custom_groups" = "No custom groups yet";
+"clip.add_to_group" = "Add to Group";
+"clip.auto_deletes_24h" = "Auto-deletes after 24 hours";
+
+"title_editor.title" = "Item Title";
+"title_editor.placeholder" = "Why did you copy this?";
+
+"settings.tab.general" = "General";
+"settings.tab.exclusions" = "Exclusions";
+"settings.tab.statistics" = "Statistics";
+"settings.tab.about" = "About";
+
+"settings.language.section" = "Language";
+"settings.language.label" = "Language";
+"settings.language.system" = "Follow System";
+"settings.language.restart_hint" = "Restart KeyClip to apply language changes.";
+
+"settings.general.launch_section" = "Launch";
+"settings.general.launch_at_login" = "Launch at Login";
+"settings.general.retention_section" = "Retention";
+"settings.general.keep_history_for" = "Keep History For";
+"settings.general.retention_hint" = "Items in Tags or custom groups never expire.";
+"settings.general.storage_section" = "Current Storage";
+"settings.general.stored_items" = "Stored Items";
+"settings.general.item_count" = "%d items";
+"settings.general.estimated_size" = "Estimated Size";
+
+"settings.exclusions.by_app" = "By App";
+"settings.exclusions.by_app_hint" = "When the current app is excluded, KeyClip ignores copy operations from it.";
+"settings.exclusions.formats" = "Excluded Formats";
+"settings.exclusions.by_size" = "By Size";
+"settings.exclusions.do_not_capture_over" = "Do not capture over";
+"settings.exclusions.max_size_picker" = "Maximum Size";
+"settings.exclusions.size_hint" = "KeyClip still has a hard 100 MB safety limit. The size rule is applied before saving.";
+"settings.exclusions.no_apps_title" = "No excluded apps yet";
+"settings.exclusions.no_apps_hint" = "Use the + button below to add apps you do not want KeyClip to record.";
+"settings.exclusions.add_app" = "Add App";
+"settings.exclusions.remove_app" = "Remove App";
+
+"settings.statistics.overview" = "Overview";
+"settings.statistics.total_captures" = "Total Captures";
+"settings.statistics.top_format" = "Top Format";
+"settings.statistics.top_source" = "Top Source";
+"settings.statistics.clear" = "Clear Statistics";
+"settings.statistics.top_formats" = "Top 5 Copy Formats";
+"settings.statistics.top_apps" = "Top 5 Source Apps";
+"settings.statistics.no_format_data" = "No format statistics yet";
+"settings.statistics.no_app_data" = "No source app statistics yet";
+
+"about.tagline" = "A small tool, made with care — so your mornings stay yours.";
+
+"open_panel.exclude_app.title" = "Choose an App to Exclude";
+"open_panel.exclude_app.prompt" = "Exclude";
+"open_panel.exclude_app.message" = "Content copied from this app will not be saved by KeyClip.";
+
+"stats.unknown_app" = "Unknown App";

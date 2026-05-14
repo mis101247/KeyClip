@@ -30,6 +30,7 @@ swift build "${SPM_ARGS[@]}"
 BUILD_DIR="$(swift build "${SPM_ARGS[@]}" --show-bin-path)"
 EXECUTABLE_PATH="${BUILD_DIR}/${APP_NAME}"
 SPARKLE_FRAMEWORK_PATH="$(find .build -path '*/Sparkle.framework' -type d | head -n 1)"
+RESOURCE_BUNDLE_PATH="$(find "${BUILD_DIR}" -maxdepth 1 -name "${APP_NAME}_${APP_NAME}.bundle" -type d | head -n 1)"
 
 if [[ ! -x "${EXECUTABLE_PATH}" ]]; then
     echo "Built executable not found at ${EXECUTABLE_PATH}" >&2
@@ -50,6 +51,10 @@ if ! otool -l "${MACOS_DIR}/${APP_NAME}" | grep -q '@executable_path/../Framewor
     install_name_tool -add_rpath "@executable_path/../Frameworks" "${MACOS_DIR}/${APP_NAME}"
 fi
 cp -R "${SPARKLE_FRAMEWORK_PATH}" "${FRAMEWORKS_DIR}/Sparkle.framework"
+
+if [[ -n "${RESOURCE_BUNDLE_PATH}" ]]; then
+    cp -R "${RESOURCE_BUNDLE_PATH}" "${RESOURCES_DIR}/"
+fi
 
 swift scripts/generate_icon.swift "${ICON_PATH}"
 

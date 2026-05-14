@@ -4,6 +4,7 @@ set -euo pipefail
 OUT_DIR="${OUT_DIR:-docs/assets/screenshots}"
 APP_NAME="KeyClip"
 APP_EXEC="./${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+DEMO_LANGUAGE="${DEMO_LANGUAGE:-en}"
 
 targets=(
   "popover:popover.png"
@@ -20,10 +21,18 @@ capture_target() {
   local filename="$2"
   local output="${OUT_DIR}/${filename}"
 
+  rm -f "${output}"
   KEYCLIP_DEMO=1 \
     KEYCLIP_DEMO_TARGET="${target}" \
     KEYCLIP_DEMO_CAPTURE_DIR="${OUT_DIR}" \
-    "${APP_EXEC}" >/tmp/keyclip-demo-${target}.log 2>&1
+    KEYCLIP_LANGUAGE="${DEMO_LANGUAGE}" \
+    AppleLanguages="(${DEMO_LANGUAGE})" \
+    "${APP_EXEC}" -AppleLanguages "(${DEMO_LANGUAGE})" -KeyClipLanguage "${DEMO_LANGUAGE}" >/tmp/keyclip-demo-${target}.log 2>&1
+  if [[ ! -f "${output}" ]]; then
+    cat "/tmp/keyclip-demo-${target}.log" >&2
+    echo "Expected screenshot was not created: ${output}" >&2
+    return 1
+  fi
   sips --resampleWidth 1240 "${output}" >/dev/null
   swift scripts/flatten_png.swift "${output}"
   echo "Captured ${output}"

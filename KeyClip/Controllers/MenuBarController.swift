@@ -114,21 +114,21 @@ final class MenuBarController: NSObject {
 
     private func showStatusItemMenu() {
         let menu = NSMenu()
-        let pauseTitle = monitor.isPaused ? "Resume Clipboard" : "Pause Clipboard"
+        let pauseTitle = monitor.isPaused ? L10n.tr("menu.resume_clipboard") : L10n.tr("menu.pause_clipboard")
         let pauseItem = NSMenuItem(title: pauseTitle, action: #selector(togglePaused), keyEquivalent: "")
         pauseItem.target = self
         menu.addItem(pauseItem)
         menu.addItem(NSMenuItem.separator())
-        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: L10n.tr("menu.settings"), action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
         menu.addItem(NSMenuItem.separator())
-        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
+        let updateItem = NSMenuItem(title: L10n.tr("menu.check_for_updates"), action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
         updateItem.isEnabled = canCheckForUpdates()
         menu.addItem(updateItem)
         menu.addItem(NSMenuItem.separator())
-        let quit = NSMenuItem(title: "Quit KeyClip", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: L10n.tr("menu.quit_keyclip"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
         statusItem.menu = menu
@@ -158,7 +158,7 @@ final class MenuBarController: NSObject {
         flashTimer?.invalidate()
         button.image = NSImage(
             systemSymbolName: "doc.on.clipboard.fill",
-            accessibilityDescription: "Captured"
+            accessibilityDescription: L10n.tr("accessibility.captured")
         )
         button.alphaValue = 1.0
         flashTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { [weak self] _ in
@@ -169,7 +169,7 @@ final class MenuBarController: NSObject {
     private func updateStatusItemAppearance() {
         guard let button = statusItem.button else { return }
         let symbolName = monitor.isPaused ? "doc.on.clipboard.fill" : "doc.on.clipboard"
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Clipboard History")
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: L10n.tr("accessibility.clipboard_history"))
         button.alphaValue = monitor.isPaused ? 0.45 : 1.0
     }
 
@@ -192,10 +192,10 @@ final class MenuBarController: NSObject {
             viewController.view = hostingView
 
             let window = NSWindow(contentViewController: viewController)
-            window.title = "KeyClip Settings"
+            window.title = L10n.tr("window.settings_title")
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.minSize = NSSize(width: 720, height: 500)
-            window.setContentSize(NSSize(width: 760, height: 540))
+            window.setContentSize(NSSize(width: 760, height: 620))
             window.center()
             window.isReleasedWhenClosed = false
             window.collectionBehavior = [.moveToActiveSpace]

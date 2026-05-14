@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "KeyClip",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
@@ -33,6 +34,7 @@ let package = Package(
                 "Clipboard/ClipboardGroupStore.swift",
                 "Clipboard/RetentionSweeper.swift",
                 "Models/ContentType.swift",
+                "Models/AppLanguage.swift",
                 "Models/ClipboardHistoryItem.swift",
                 "Models/ClipboardGroup.swift",
                 "Models/RetentionPolicy.swift",
@@ -45,8 +47,12 @@ let package = Package(
                 "Utilities/ContentTypeDetector.swift",
                 "Utilities/DemoMode.swift",
                 "Utilities/GlobalHotkey.swift",
+                "Utilities/L10n.swift",
                 "Utilities/StringHashing.swift",
                 "Utilities/UserSettings.swift"
+            ],
+            resources: [
+                .process("Resources")
             ]
         )
     ]
