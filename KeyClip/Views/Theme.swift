@@ -48,9 +48,9 @@ enum Theme {
 
     static let contentBackground = LinearGradient(
         colors: [
-            canvas,
-            mist.opacity(0.34),
-            cream.opacity(0.62)
+            color(0xfafbfc),
+            color(0xf3f9fd),
+            color(0xf8f4ec)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -58,9 +58,9 @@ enum Theme {
 
     static let sidebarBackground = LinearGradient(
         colors: [
-            mist.opacity(0.88),
-            leaf.opacity(0.42),
-            canvas
+            color(0xeaf7fb),
+            color(0xeff8ef),
+            color(0xfafbfc)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -68,9 +68,9 @@ enum Theme {
 
     static let selectedBackground = LinearGradient(
         colors: [
-            honey.opacity(0.42),
-            sky.opacity(0.34),
-            lotus.opacity(0.24)
+            color(0xfff4cc),
+            color(0xe9f5fc),
+            color(0xffedf0)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

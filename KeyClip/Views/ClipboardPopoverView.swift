@@ -469,7 +469,7 @@ private struct FooterHoverBackground: ViewModifier {
     }
 }
 
-private enum SettingsTab: String, CaseIterable, Identifiable {
+enum SettingsTab: String, CaseIterable, Identifiable {
     case general
     case exclusion
     case statistics
@@ -514,6 +514,12 @@ struct SettingsPanelView: View {
         25 * 1024 * 1024,
         100 * 1024 * 1024
     ]
+
+    init(settings: UserSettings, historyStore: ClipboardHistoryStore, initialTab: SettingsTab = .general) {
+        self.settings = settings
+        self.historyStore = historyStore
+        self._selectedTab = State(initialValue: initialTab)
+    }
 
     var body: some View {
         VStack(spacing: 0) {

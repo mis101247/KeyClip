@@ -43,6 +43,7 @@ let package = Package(
                 "Utilities/AppIconLoader.swift",
                 "Utilities/AppUpdater.swift",
                 "Utilities/ContentTypeDetector.swift",
+                "Utilities/DemoMode.swift",
                 "Utilities/GlobalHotkey.swift",
                 "Utilities/StringHashing.swift",
                 "Utilities/UserSettings.swift"

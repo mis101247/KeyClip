@@ -231,6 +231,16 @@ final class ClipboardHistoryStore: ObservableObject {
         save()
     }
 
+    func replaceForDemo(at index: Int, with item: ClipboardHistoryItem) {
+        guard DemoMode.isEnabled,
+              items.indices.contains(index) else {
+            return
+        }
+
+        items[index] = item
+        save()
+    }
+
     func estimatedStorageBytes() -> Int {
         items.reduce(0) { total, item in
             var itemBytes = item.content.utf8.count

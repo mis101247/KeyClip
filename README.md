@@ -2,7 +2,20 @@
 
 A calm, fast clipboard manager that lives in your macOS menu bar.
 
-<img src="https://github.com/user-attachments/assets/b3bd83c5-dde3-47b5-9214-d450418fb817" alt="KeyClip popover screenshot" width="620" />
+<!-- screenshots:start -->
+<p>
+  <img src="docs/assets/screenshots/popover.png" alt="KeyClip clipboard popover" width="620">
+</p>
+<p>
+  <img src="docs/assets/screenshots/settings-general.png" alt="KeyClip general settings" width="620">
+</p>
+<p>
+  <img src="docs/assets/screenshots/settings-exclusions.png" alt="KeyClip exclusion settings" width="620">
+</p>
+<p>
+  <img src="docs/assets/screenshots/settings-statistics.png" alt="KeyClip statistics settings" width="620">
+</p>
+<!-- screenshots:end -->
 
 KeyClip remembers what you copy — text, rich text with formatting, images, links, code, and more — and brings it back with a keystroke. Everything stays on your Mac: KeyClip stores clipboard history locally and does not sync, upload, phone home, or make network requests.
 

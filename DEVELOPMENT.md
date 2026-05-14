@@ -172,6 +172,24 @@ On Gatekeeper-strict systems, an ad-hoc or unsigned local build may require righ
 5. Copy text from any app, then click the menu bar icon to view clipboard history.
 6. Click a history row to write that item back to the pasteboard and close the popover.
 
+## README Screenshots
+
+The repository includes a deterministic demo mode for refreshing README screenshots with seeded clipboard history, settings, exclusion rules, and statistics data.
+
+Generate the screenshots:
+
+```sh
+./scripts/capture_screenshots.sh
+```
+
+Update the README screenshot block:
+
+```sh
+./scripts/update_readme_screenshots.sh
+```
+
+The capture script writes PNG files to `docs/assets/screenshots/`. Demo mode renders the SwiftUI window content from inside the app process, so it does not require macOS Screen Recording permission.
+
 ## Architecture
 
 - The app uses a SwiftUI `@main` app with only a `Settings` scene, so no standard window opens.
